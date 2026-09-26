@@ -20,6 +20,11 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
 ]
 
+[project.urls]
+Homepage = "https://github.com/ajayvenugopal/After-Hours"
+Repository = "https://github.com/ajayvenugopal/After-Hours"
+Issues = "https://github.com/ajayvenugopal/After-Hours/issues"
+
 [project.scripts]
 agentdock = "agentdock.cli:agentdock_main"
 

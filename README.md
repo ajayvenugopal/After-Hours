@@ -10,7 +10,7 @@ Start with one tool; install only what it needs.
 
 | Tool | What it does | Category | Status |
 | --- | --- | --- | --- |
-| [AgentDock](tools/agentdock/README.md) | Plan with Codex or Claude, implement with a local model, then return for review. | Coding agents | Experimental |
+| [AgentDock](tools/agentdock/README.md) | Plan with Codex or Claude, implement with a local model, then return for review. | Coding workflow | Experimental |
 
 ### AgentDock
 
