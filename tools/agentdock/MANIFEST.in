@@ -1,0 +1,14 @@
+include README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md
+include pyproject.toml MANIFEST.in .gitignore
+include LICENSE
+recursive-include src/agentdock *.py
+recursive-include tests *.py
+recursive-include scripts *.py
+recursive-include docs *.md *.svg *.png
+prune .agentdock
+prune .ai-task
+prune .venv
+prune .idea
+prune build
+prune dist
+global-exclude __pycache__ *.py[cod] .DS_Store .aider* .env .env.* *.pem *.key *.keystore *.jks *.log

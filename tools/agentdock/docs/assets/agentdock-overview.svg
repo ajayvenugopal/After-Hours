@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1200 780" role="img" aria-labelledby="title desc">
+  <title id="title">AgentDock — Your terminal. Your agents.</title>
+  <desc id="desc">Illustrative terminal workspace and sequential workflow: Codex or Claude plans and exits; a local model implements, tests and repairs through Aider and Ollama; Codex or Claude reviews the task, plan, diff and test summary and exits; the local model applies fixes and runs final verification. Paid agents are stopped during local work. Model assignments are configurable.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1"><stop stop-color="#191629"/><stop offset="1" stop-color="#0c1019"/></linearGradient>
+    <linearGradient id="accent"><stop stop-color="#c4b5fd"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="none" stroke="#a99cc9" stroke-width="1.5"/></marker>
+  </defs>
+  <rect width="1200" height="780" rx="24" fill="url(#background)"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <path d="M50 73L66 49L82 73L66 97Z" fill="none" stroke="url(#accent)" stroke-width="3"/>
+    <text x="100" y="89" fill="#f5f3ff" font-size="52" font-weight="700" letter-spacing="-2">AgentDock</text>
+    <text x="48" y="137" fill="#e3dcf4" font-size="24">Cloud judgment. Local execution.</text>
+    <text x="48" y="168" fill="#aaa6bb" font-size="16">A terminal workspace for your agents — with a model for every stage.</text>
+    <rect x="949" y="54" width="203" height="43" rx="10" fill="#211d32" stroke="#4b405f"/>
+    <text x="973" y="82" fill="#ddd1ff" font-family="monospace" font-size="18">$ agentdock</text>
+
+    <rect x="48" y="204" width="1104" height="254" rx="14" fill="#101219" stroke="#383342"/>
+    <path d="M48 246H1152" stroke="#383342"/>
+    <circle cx="72" cy="225" r="4" fill="#716881"/><circle cx="88" cy="225" r="4" fill="#716881"/><circle cx="104" cy="225" r="4" fill="#716881"/>
+    <text x="128" y="230" fill="#bbb3c9" font-size="13">WORKSPACE / example project</text>
+    <text x="1128" y="230" text-anchor="end" fill="#91899f" font-size="12">ILLUSTRATIVE VIEW</text>
+    <g font-family="monospace" font-size="16">
+      <text x="76" y="280" fill="#c4b5fd">BUILD MODE</text>
+      <text x="215" y="280" fill="#91899f">compact output</text>
+      <text x="76" y="317" fill="#91899f">PLAN</text><text x="179" y="317" fill="#e6e1ef">codex</text><text x="300" y="317" fill="#aaa6bb">provider default</text>
+      <text x="76" y="346" fill="#91899f">CODE</text><text x="179" y="346" fill="#e6e1ef">local</text><text x="300" y="346" fill="#aaa6bb">qwen3-coder</text>
+      <text x="76" y="375" fill="#91899f">REVIEW</text><text x="179" y="375" fill="#e6e1ef">claude</text><text x="300" y="375" fill="#aaa6bb">provider default</text>
+      <text x="76" y="429" fill="#c4b5fd">❯</text><text x="100" y="429" fill="#f5f3ff">Build a coming soon page</text>
+    </g>
+    <path d="M626 268V434" stroke="#383342"/>
+    <text x="656" y="287" fill="#c4b5fd" font-size="13" letter-spacing="1.5">ONE HANDOFF AT A TIME</text>
+    <text x="656" y="323" fill="#e6e1ef" font-size="19">Describe the task. Follow the work.</text>
+    <text x="656" y="355" fill="#aaa6bb" font-size="16">Stage progress and elapsed-time indicators</text>
+    <text x="656" y="382" fill="#aaa6bb" font-size="16">Saved plans, review findings and code diffs</text>
+    <text x="656" y="422" fill="#c4b5fd" font-family="monospace" font-size="14">/workflow setup   /views   /diff</text>
+
+    <text x="48" y="504" fill="#aaa6bb" font-size="12" letter-spacing="2">THE DEFAULT HYBRID WORKFLOW</text>
+    <g fill="#181722" stroke="#44394f">
+      <rect x="48" y="525" width="252" height="151" rx="12"/>
+      <rect x="332" y="525" width="252" height="151" rx="12"/>
+      <rect x="616" y="525" width="252" height="151" rx="12"/>
+      <rect x="900" y="525" width="252" height="151" rx="12"/>
+    </g>
+    <g fill="none" stroke="#a99cc9" stroke-width="1.5" marker-end="url(#arrow)"><path d="M306 600H325"/><path d="M590 600H609"/><path d="M874 600H893"/></g>
+    <g font-size="12" fill="#c4b5fd" letter-spacing="1">
+      <text x="66" y="553">01 / PLAN</text><text x="350" y="553">02 / IMPLEMENT</text><text x="634" y="553">03 / REVIEW</text><text x="918" y="553">04 / VERIFY</text>
+    </g>
+    <g fill="#f5f3ff" font-size="21" font-weight="700">
+      <text x="66" y="586">Codex or Claude</text><text x="350" y="586">Local model</text><text x="634" y="586">Codex or Claude</text><text x="918" y="586">Local model</text>
+    </g>
+    <g fill="#aaa6bb" font-size="14">
+      <text x="66" y="614">Inspect → save PLAN.md</text><text x="350" y="614">Aider + Ollama</text><text x="634" y="614">Task, plan, diff + test summary</text><text x="918" y="614">Apply fixes → final checks</text>
+      <text x="66" y="651" fill="#ddd1ff">Paid agent exits</text><text x="350" y="651" fill="#ddd1ff">Code → test → repair locally</text><text x="634" y="651" fill="#ddd1ff">Save REVIEW.md → exit</text><text x="918" y="651" fill="#ddd1ff">Show diff for your approval</text>
+    </g>
+    <text x="600" y="715" text-anchor="middle" fill="#e3dcf4" font-size="16">Paid agents stay stopped during local work.</text>
+    <text x="600" y="745" text-anchor="middle" fill="#aaa6bb" font-size="13">Configurable models · Bounded local repairs · Optional paid escalation · No automatic commits or pushes</text>
+  </g>
+</svg>

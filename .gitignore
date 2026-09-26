@@ -1,0 +1,33 @@
+# Local agent state and conversations (at any project depth)
+.agentdock/
+.ai-task/
+.aider*
+# Development environments, caches and generated packages
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+node_modules/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+# Editors and operating system metadata
+.idea/
+.vscode/
+.DS_Store
+# Local credentials and logs
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.keystore
+*.jks
+*.log

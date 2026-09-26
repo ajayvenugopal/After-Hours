@@ -1,0 +1,49 @@
+name: AgentDock tests and packaging
+
+on:
+  push:
+    paths:
+      - 'tools/agentdock/**'
+      - '.github/workflows/agentdock.yml'
+  pull_request:
+    paths:
+      - 'tools/agentdock/**'
+      - '.github/workflows/agentdock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: tools/agentdock
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ['3.9', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install .
+      - run: python -m unittest discover -s tests -v
+      - run: agentdock --help
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: python scripts/check_release.py
+      - run: python -m twine check dist/*
