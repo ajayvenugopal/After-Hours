@@ -22,10 +22,10 @@ class ReleaseTests(unittest.TestCase):
             self.make_wheel(path)
             self.assertEqual(inspect_archive(path), 4)
 
-    def test_private_and_legacy_paths_are_rejected(self):
+    def test_private_paths_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "agentdock.whl"
-            for extra in (".agentdock/config.json", ".env", "ai_task/cli.py", "id.key", "../outside"):
+            for extra in (".agentdock/config.json", ".env", "id.key", "../outside"):
                 self.make_wheel(path, extra)
                 with self.subTest(extra=extra), self.assertRaises(ValueError):
                     inspect_archive(path)

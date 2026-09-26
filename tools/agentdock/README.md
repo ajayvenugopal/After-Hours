@@ -30,22 +30,13 @@ planning, review and optional escalation still consume your provider's allowance
 </p>
 
 > The command, Python package and distribution are all named `agentdock`.
-> Project state lives in `.agentdock/`. The old `ai-task` and `ai-chat` commands
-> are no longer shipped.
+> Project state lives in `.agentdock/`.
 
-### Upgrading from the old name
+### Working view
 
-Run `python3 scripts/install.py` from this checkout. It installs the renamed tool
-and replaces the old `agentdock` launcher. If the old `ai-task` distribution is
-still installed, remove it with `uv tool uninstall ai-task`, then rerun the installer
-to ensure the new launcher is present. This does not delete project data.
-
-On first normal use in a project, AgentDock renames `.ai-task/` to `.agentdock/`
-if the new directory does not already exist. Configuration, logs and plans are
-preserved. Managed tools move to `.agentdock/legacy-tools/` because their absolute
-paths are no longer valid; Aider is rebuilt on demand. If both state directories
-exist, AgentDock uses `.agentdock/` and leaves the old directory untouched—there
-is no automatic merge. Historical logs may still contain the original paths.
+<p align="center">
+  <img src="docs/assets/working-screenshot.png" alt="AgentDock terminal workspace showing configured planning, coding and review stages." width="760" />
+</p>
 
 ## What you get
 
@@ -515,10 +506,7 @@ next native launch; it does not alter an already-running native session.
 | Check build assignments and effective stage models | Run `/workflow`. |
 | Check the selected chat agent's configured model | Run `/model`. |
 
-For builds, selection follows **stage override → agent model → legacy fallback,
-if configured → provider default**. Consequently, changing `/model` alone will not
-change a stage that has its own override. To return fully to the provider default,
-clear the stage override and agent model, and leave legacy model settings unset.
+For builds, selection follows **stage override -> agent model -> provider default**. Consequently, changing `/model` alone will not change a stage that has its own override. To return fully to the provider default, clear the stage override and agent model.
 
 Selections are saved per project in `.agentdock/config.json`. Saying “switch models”
 in an ordinary message does not change these settings—use the slash commands.
@@ -691,7 +679,6 @@ explicit `--replace`.
 
 `agentdock "TASK"` remains a shortcut for `agentdock run "TASK"`.
 `run --skip-doctor` skips preflight, not execution dependencies.
-`doctor --no-gradle` is a legacy option; Gradle is no longer a required check.
 Doctor reports missing tools without installing them or starting services.
 
 ## Configuration
@@ -733,9 +720,9 @@ shows stage settings you can merge into the generated file:
 | `ollama_base_url` | Endpoint; default `http://127.0.0.1:11434`. |
 | `max_repair_attempts` | Local repairs before one paid debugging escalation. |
 | `verification_command` | Override the plan's check; `"NONE"` requests manual verification. |
-| `final_codex_review` | Enables review for either provider, despite the legacy name. |
-| `gradle_command` | Legacy verification override when `verification_command` is unset. |
-| `codex_planner_model`, `codex_reviewer_model` | Legacy model fallbacks; prefer `stage_models`. |
+| `final_codex_review` | Enables or disables the final cloud review stage. |
+| `gradle_command` | Compatibility verification override when `verification_command` is unset. |
+| `codex_planner_model`, `codex_reviewer_model` | Compatibility model fallbacks; prefer `stage_models`. |
 
 Only `invocation` lifetime is supported in orchestrated stages. The `role` field
 labels an agent; the `workflow` mapping determines which agent runs. The `auth`

@@ -6,11 +6,11 @@ from pathlib import Path
 
 
 BASELINE = ContextVar("file_baseline", default=None)
-EXCLUDED = {".git", ".agentdock", ".ai-task", ".venv", "venv", "node_modules", "__pycache__", ".gradle", "build", "dist", ".idea"}
+EXCLUDED = {".git", ".agentdock", ".venv", "venv", "node_modules", "__pycache__", ".gradle", "build", "dist", ".idea"}
 
 
 def is_tool_artifact(name: str) -> bool:
-    return any(part in {".agentdock", ".ai-task"} or part.startswith(".aider") or part == ".DS_Store"
+    return any(part in {".agentdock"} or part.startswith(".aider") or part == ".DS_Store"
                for part in Path(name).parts)
 
 

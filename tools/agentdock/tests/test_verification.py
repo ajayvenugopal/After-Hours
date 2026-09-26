@@ -15,7 +15,7 @@ class VerificationTests(unittest.TestCase):
         config = dict(DEFAULT_CONFIG, verification_command="npm run check")
         self.assertEqual(parse_verification_command("VERIFY_COMMAND: NONE", config), ["npm", "run", "check"])
 
-    def test_legacy_gradle_plan_still_works(self):
+    def test_gradle_plan_field_still_works(self):
         self.assertEqual(parse_verification_command("GRADLE_COMMAND: ./gradlew test", DEFAULT_CONFIG), ["./gradlew", "test"])
 
     def test_missing_command_is_not_reported_as_passing(self):

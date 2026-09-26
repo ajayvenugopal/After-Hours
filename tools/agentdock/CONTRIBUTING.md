@@ -35,8 +35,7 @@ python scripts/check_release.py
 python -m twine check dist/*
 ```
 
-`check_release.py` checks the wheel and source archive for required files, legacy
-package paths and private/generated artifacts. It is not a complete secret scanner.
+`check_release.py` checks the wheel and source archive for required files and private/generated artifacts. It is not a complete secret scanner.
 Inspect the actual files you intend to publish as well.
 
 Before publishing, verify the MIT license is included, set the release version, read

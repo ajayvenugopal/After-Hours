@@ -7,8 +7,8 @@ import tarfile
 import zipfile
 
 
-PRIVATE_PARTS = {".git", ".agentdock", ".ai-task", ".venv", ".idea", ".vscode",
-                 "__pycache__", "build", "dist", "ai_task", "node_modules"}
+PRIVATE_PARTS = {".git", ".agentdock", ".venv", ".idea", ".vscode",
+                 "__pycache__", "build", "dist", "node_modules"}
 SECRET_SUFFIXES = {".pem", ".key", ".keystore", ".jks", ".log", ".pyc", ".pyo"}
 
 
@@ -51,7 +51,7 @@ def inspect_archive(path):
             if len(entries) != 1:
                 raise ValueError("Expected one entry-point metadata file")
             entry_text = archive.read(entries[0]).decode()
-            if "agentdock = agentdock.cli:agentdock_main" not in entry_text or "ai-task =" in entry_text or "ai-chat =" in entry_text:
+            if "agentdock = agentdock.cli:agentdock_main" not in entry_text:
                 raise ValueError("Incorrect console entry points")
     return len(names)
 

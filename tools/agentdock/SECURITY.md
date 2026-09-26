@@ -25,7 +25,7 @@ sandbox the project scripts it invokes.
 
 ## Private data
 
-Never publish `.agentdock/`, legacy `.ai-task/`, `.aider*` histories, local
+Never publish `.agentdock/`, `.aider*` histories, local
 environment files, credentials or provider logs. Git ignore rules do not remove
 already tracked files or history. Inspect staging and archive contents before
 publishing. Full-screen terminal mode does not remove sensitive output from logs.

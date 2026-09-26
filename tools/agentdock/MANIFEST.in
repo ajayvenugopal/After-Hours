@@ -6,7 +6,6 @@ recursive-include tests *.py
 recursive-include scripts *.py
 recursive-include docs *.md *.svg *.png
 prune .agentdock
-prune .ai-task
 prune .venv
 prune .idea
 prune build

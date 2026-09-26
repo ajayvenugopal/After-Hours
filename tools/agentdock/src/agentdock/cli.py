@@ -161,15 +161,6 @@ def state_path(repo: Path, name: str) -> Path:
 
 def ensure_state(repo: Path) -> Path:
     directory = repo / STATE_DIR_NAME
-    legacy = repo / ".ai-task"
-    if not directory.exists() and legacy.is_dir() and not legacy.is_symlink():
-        if (legacy / "tools").exists() and (legacy / "legacy-tools").exists():
-            raise WorkflowError("Cannot migrate state: both tools and legacy-tools exist. Resolve the backup conflict first.")
-        legacy.rename(directory)
-        # Managed virtual environments contain absolute paths; preserve, never reuse.
-        if (directory / "tools").exists():
-            (directory / "tools").rename(directory / "legacy-tools")
-        print("Migrated project state to .agentdock; managed tools will be rebuilt when needed.")
     directory.mkdir(exist_ok=True)
     config_path = directory / "config.json"
     if not config_path.exists():
@@ -780,10 +771,10 @@ You may inspect repository files and run read-only discovery commands. Do not ed
 delete, format, or otherwise change any repository file. Do not run commands that mutate the
 working tree. Return only a detailed Markdown implementation plan.
 
-Inspect application source only. Do not scan .agentdock/, .ai-task/, .aider*, .venv/, node_modules/,
+Inspect application source only. Do not scan .agentdock/, .aider*, .venv/, node_modules/,
 build/, dist/ or dependency caches. These are tooling, not project source.
 Never use an unrestricted recursive listing (including rg --files --hidden).
-For discovery use: rg --files -g '!.agentdock/**' -g '!.ai-task/**' -g '!.aider*' -g '!.venv/**'
+For discovery use: rg --files -g '!.agentdock/**' -g '!.aider*' -g '!.venv/**'
 -g '!node_modules/**' -g '!build/**' -g '!dist/**'
 If no application files exist, plan a new project without exploring installed tooling.
 {inventory}
@@ -1003,7 +994,6 @@ def make_diff(repo: Path) -> str:
     result = subprocess.run(
         ["git", "diff", "--binary", "--no-ext-diff", "HEAD", "--", ".",
          ":(exclude)**/.agentdock/**", ":(exclude).agentdock/**",
-         ":(exclude)**/.ai-task/**", ":(exclude).ai-task/**",
          ":(exclude)**/.aider*", ":(exclude).aider*", ":(exclude)**/.DS_Store", ":(exclude).DS_Store"],
         cwd=repo,
         text=True,
@@ -1790,7 +1780,7 @@ def build_parser(prog: str = "agentdock") -> argparse.ArgumentParser:
                              help="temporary dark full-screen workspace (default for interactive chat; --no-fullscreen for panel-only)")
 
     doctor_parser = subparsers.add_parser("doctor", help="check dependencies and Ollama")
-    doctor_parser.add_argument("--no-gradle", action="store_true", help="legacy option; Gradle is no longer required")
+    doctor_parser.add_argument("--no-gradle", action="store_true", help="Gradle is no longer required")
 
     agents_parser = subparsers.add_parser("agents", help="manage configured agents")
     agent_subparsers = agents_parser.add_subparsers(dest="agents_command", required=True)
