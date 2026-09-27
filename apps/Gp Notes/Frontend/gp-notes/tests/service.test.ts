@@ -52,7 +52,6 @@ function audio(
 function service(provider = good, options = config) {
   return createService(provider, () => options);
 }
-
 test("public sample never calls a provider and cannot process arbitrary user text", async () => {
   const fail = async () => {
     throw new Error("must not call");
@@ -128,11 +127,15 @@ test("text validation rejects malformed, missing, blank, oversized and wrong con
   assert.equal((await service()(invalid, "text")).status, 400);
 });
 test("streamed payload limits are enforced without Content-Length", async () => {
-  const response = await service()(
-    request({ text: "x".repeat(MAX_TEXT * 4 + 1024) }),
-    "text",
+  assert.equal(
+    (
+      await service()(
+        request({ text: "x".repeat(MAX_TEXT * 4 + 1024) }),
+        "text",
+      )
+    ).status,
+    413,
   );
-  assert.equal(response.status, 413);
 });
 test("valid text produces a validated draft and trims input", async () => {
   let seen = "";
@@ -253,7 +256,7 @@ test("request cancellation reaches provider and returns a sanitized timeout", as
   })(req, "text");
   assert.equal((await response).status, 504);
 });
-test("export includes provenance, edits and source; never a review stamp from a provider", () => {
+test("export includes provenance, edits and source", () => {
   const exported = exportNote({
     note: { ...SAMPLE_NOTE, plan: "Manually corrected." },
     transcription: SAMPLE_TEXT,
@@ -263,15 +266,21 @@ test("export includes provenance, edits and source; never a review stamp from a 
   assert.match(exported, /Manually corrected/);
   assert.match(exported, /Source transcript/);
 });
-
 test("same-origin browser requests use the public Host rather than an internal Next URL", async () => {
-  const req = request(
-    {},
-    {
-      host: "127.0.0.1",
-      origin: "http://127.0.0.1",
-      "x-gp-notes-demo": "true",
-    },
+  assert.equal(
+    (
+      await service()(
+        request(
+          {},
+          {
+            host: "127.0.0.1",
+            origin: "http://127.0.0.1",
+            "x-gp-notes-demo": "true",
+          },
+        ),
+        "text",
+      )
+    ).status,
+    200,
   );
-  assert.equal((await service()(req, "text")).status, 200);
 });

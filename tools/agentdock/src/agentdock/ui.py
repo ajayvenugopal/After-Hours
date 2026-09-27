@@ -52,7 +52,7 @@ def welcome(project, mode, output, agents):
         panel("AgentDock", [f"Project: {project}", f"Mode: {mode}", *[f"{role}: {name} · {model}" for role, name, model in agents]])
         return
     print()
-    print(styled("  ◈ ") + styled("AgentDock", "bold") + styled("   /   your coding workspace", "muted"))
+    print(styled("  ╭─◈─╮ ", "accent") + styled("AgentDock", "bold") + styled("   /   your coding workspace", "muted"))
     print(styled("    Cloud judgment. Local execution.", "muted"))
     panel("WORKSPACE", [f"{project}", "", f"{mode.upper()} MODE   ·   {output} output", "",
                         *[f"{role:<7} {name}  ·  {model}" for role, name, model in agents]])
@@ -60,11 +60,11 @@ def welcome(project, mode, output, agents):
         print("  " + styled("Ready to build", "bold") + styled(" — describe the change you want to make.", "muted"))
         print(styled("  Planning → implementation → review → final verification", "muted"))
     else:
-        print("  " + styled("Ready to chat", "bold") + styled(" — ask a question, or /build TASK to edit files.", "muted"))
+        print("  " + styled("Ready to chat", "bold") + styled(" — ask a question, or /build to switch modes.", "muted"))
     print()
     print("  " + styled("/workflow setup") + styled("  configure stages    ", "muted") + styled("/agents") + styled("  your team", "muted"))
     print("  " + styled("/views") + styled("           watch activity      ", "muted") + styled("/help") + styled("    all commands", "muted"))
-    print(styled("\n  Tab to complete · /mode to switch · /theme to personalize", "muted"))
+    print(styled("\n  Tab to complete · /chat or /build to switch · /theme to personalize", "muted"))
     print()
 
 

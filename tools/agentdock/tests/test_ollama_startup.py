@@ -95,3 +95,35 @@ class OllamaStartupTests(unittest.TestCase):
         with patch("agentdock.cli.fetch_ollama_models", return_value=["custom"]), patch("agentdock.cli.urllib.request.urlopen", return_value=io.BytesIO(b'{"error":"not enough memory"}')), patch("builtins.print"):
             with self.assertRaisesRegex(WorkflowError, "not enough memory"):
                 ensure_ollama_ready(Path("/tmp"), DEFAULT_CONFIG, "custom")
+
+    def test_loading_notice_once_per_session_but_readiness_still_checked(self):
+        from agentdock.cli import SESSION_READY
+        token = SESSION_READY.set(set())
+        try:
+            with patch('agentdock.cli.fetch_ollama_models', return_value=['custom:latest']) as check, patch(
+                    'agentdock.cli.urllib.request.urlopen', side_effect=lambda *a, **k: io.BytesIO(b'{"done":true}')) as request, patch(
+                    'agentdock.cli.status') as status, patch('agentdock.cli.success') as success, patch(
+                    'agentdock.cli.ElapsedTimer') as timer:
+                ensure_ollama_ready(Path('/tmp'), DEFAULT_CONFIG, 'custom')
+                ensure_ollama_ready(Path('/tmp'), DEFAULT_CONFIG, 'ollama_chat/custom:latest')
+            self.assertEqual(check.call_count, 2)
+            self.assertEqual(request.call_count, 2)
+            status.assert_called_once()
+            success.assert_called_once()
+            timer.assert_called_once()
+        finally:
+            SESSION_READY.reset(token)
+
+    def test_failed_warmup_does_not_suppress_retry_notice(self):
+        from agentdock.cli import SESSION_READY
+        token = SESSION_READY.set(set())
+        try:
+            with patch('agentdock.cli.fetch_ollama_models', return_value=['custom']), patch(
+                    'agentdock.cli.urllib.request.urlopen', side_effect=[io.BytesIO(b'{"error":"failed"}'), io.BytesIO(b'{"done":true}')]), patch(
+                    'agentdock.cli.status') as status, patch('agentdock.cli.success'), patch('agentdock.cli.ElapsedTimer'):
+                with self.assertRaises(WorkflowError):
+                    ensure_ollama_ready(Path('/tmp'), DEFAULT_CONFIG, 'custom')
+                ensure_ollama_ready(Path('/tmp'), DEFAULT_CONFIG, 'custom')
+            self.assertEqual(status.call_count, 2)
+        finally:
+            SESSION_READY.reset(token)

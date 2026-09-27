@@ -4,6 +4,7 @@ import argparse
 import codecs
 import copy
 from contextvars import ContextVar
+from contextlib import nullcontext
 import json
 import os
 import readline
@@ -22,9 +23,11 @@ import urllib.parse
 from pathlib import Path
 from typing import Any, Iterable, Optional, Sequence
 
-from .activity import Activity, capture_native, dashboard
+from .activity import Activity, capture_native, dashboard, plain_text
 from .file_diff import BASELINE, snapshot, file_diff, diff_snapshots, is_tool_artifact
 from .progress import LocalProgress, ElapsedTimer
+from .usage import TokenUsage, token_label
+from .chat_input import ChatInput
 from . import ui
 from . import screen
 
@@ -32,6 +35,8 @@ from . import screen
 STATE_DIR_NAME = ".agentdock"
 LIVE_OUTPUT = ContextVar("live_output", default=False)
 SESSION_MODELS = ContextVar("session_models", default=None)
+SESSION_READY = ContextVar("session_ready", default=None)
+CURRENT_USAGE = ContextVar("current_usage", default=None)
 DEFAULT_CONFIG: dict[str, Any] = {
     "version": 2,
     "qwen_model": "ollama_chat/qwen3-coder:30b-a3b-q4_K_M",
@@ -397,19 +402,26 @@ def ensure_ollama_ready(repo: Path, config: dict[str, Any], model: str, *, warm:
     if not warm:
         return
     track_session_model(base, selected)
-    status("Ollama", f"Loading {selected} (first load can take a while)...")
+    ready = SESSION_READY.get()
+    key = (base, canonical(selected))
+    announce = ready is None or key not in ready
+    if announce:
+        status("Ollama", f"Loading {selected} (first load can take a while)...")
     request = urllib.request.Request(base + "/api/generate", data=json.dumps({
         "model": selected, "prompt": "", "stream": False, "keep_alive": "5m",
     }).encode(), headers={"Content-Type": "application/json"})
     try:
-        with ElapsedTimer(sys.stdout, "Ollama loading"):
+        with ElapsedTimer(sys.stdout, "Ollama loading") if announce else nullcontext():
             with urllib.request.urlopen(request, timeout=120) as response:
                 payload = json.load(response)
             if payload.get("error") or not payload.get("done"):
                 raise WorkflowError(f"Ollama could not load {selected}: {payload.get('error', 'incomplete response')}")
     except (OSError, urllib.error.URLError, ValueError) as exc:
         raise WorkflowError(f"Could not load Ollama model {selected}: {exc}") from exc
-    success(f"Local model ready: {selected}")
+    if ready is not None:
+        ready.add(key)
+    if announce:
+        success(f"Local model ready: {selected}")
 
 
 def aider_executable(repo: Path) -> Optional[str]:
@@ -500,6 +512,15 @@ def run_logged(
     emit = timer.write if timer else terminal.write
     progress = LocalProgress(lambda message: emit(f"[{progress_label}] {message}\n")) if progress_label and progress_narration and not show_output else None
     activity = Activity(log_path.parent, agent_name or Path(argv[0]).name, Path(argv[0]).name)
+    reports = CURRENT_USAGE.get()
+    invocation = object()
+
+    def update_usage(total, approximate):
+        if reports is not None:
+            reports[invocation] = (total, approximate)
+        activity.set_usage(total, approximate)
+
+    usage = TokenUsage(Path(argv[0]).name, update_usage)
     with log_path.open("a", encoding="utf-8") as log:
         log.write(f"\n$ {shlex.join(argv)}\n")
         log.flush()
@@ -530,6 +551,7 @@ def run_logged(
                     activity.write(block)
                     decoded = decoder.decode(block)
                     chunks.append(decoded)
+                    usage.feed(decoded)
                     log.write(decoded)
                     log.flush()
                     if progress:
@@ -539,6 +561,8 @@ def run_logged(
                         terminal.flush()
                 rest = decoder.decode(b"", final=True)
                 chunks.append(rest)
+                usage.feed(rest)
+                usage.finish()
                 log.write(rest)
                 log.flush()
                 if progress:
@@ -674,7 +698,7 @@ def run_claude(
     timeout: Optional[int] = None,
     agent_name: str = "claude",
 ) -> None:
-    argv = ["claude", "-p", "--output-format", "text"]
+    argv = ["claude", "-p", "--output-format", "json"]
     if model:
         argv.extend(["--model", model])
     result = run_logged(argv, repo, log_path, input_text=prompt, timeout=timeout,
@@ -682,7 +706,17 @@ def run_claude(
     if result.returncode or not result.stdout.strip():
         detail = one_line_error(result.stdout, f"see {log_path}")
         raise WorkflowError(f"Claude failed: {detail}")
-    destination.write_text(result.stdout.strip() + "\n")
+    payload = None
+    for line in result.stdout.splitlines():
+        try:
+            candidate = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(candidate, dict) and candidate.get("type") == "result":
+            payload = candidate
+    if not payload or payload.get("is_error") or not isinstance(payload.get("result"), str) or not payload["result"].strip():
+        raise WorkflowError(f"Claude returned no successful response; see {log_path}")
+    destination.write_text(payload["result"].strip() + "\n")
 
 
 def run_paid_agent(
@@ -752,12 +786,17 @@ User message:
     if agent["backend"] == "aider_ollama":
         selected = ollama_runtime_model(str(model or config["qwen_model"]))
         ensure_ollama_ready(repo, config, selected)
-        argv = ["ollama", "run", selected, prompt]
+        argv = ["ollama", "run", "--verbose", selected, prompt]
         env = dict(os.environ, OLLAMA_HOST=str(config["ollama_base_url"]))
         result = run_logged(argv, repo, log_path, timeout=timeout, agent_name=agent_name, env=env)
         if result.returncode:
             raise WorkflowError(f"Ollama chat failed; see {log_path}")
-        return result.stdout.strip()
+        # Verbose metrics are emitted after the response; keep them in logs,
+        # but out of the answer and subsequent conversation context.
+        answer = plain_text(result.stdout)
+        answer = re.sub(r"(?m)^[ \t\u2800-\u28ff]*[\u2800-\u28ff][ \t\u2800-\u28ff]*\n?", "", answer)
+        answer = re.sub(r"(?ms)^[ \t]*total duration:[ \t]+[^\n]*\n(?:(?:[ \t]*(?:load duration|prompt eval (?:count|cached|duration|rate)|eval (?:count|duration|rate)):[^\n]*(?:\n|$))|[ \t]*\n)*\Z", "", answer)
+        return answer.strip()
     raise WorkflowError(f"Unsupported backend for {agent_name}: {agent['backend']}")
 
 
@@ -1381,7 +1420,8 @@ CHAT_COMMANDS = {
     "/output": "Choose /output compact (results only) or /output raw (all provider logs)",
     "/workflow": "Show stage assignments; /workflow setup configures agents and models",
     "/mode": "Choose /mode build (automatic workflow) or /mode chat",
-    "/build": "Plan, implement locally, review and verify: /build TASK",
+    "/build": "Switch to build mode, or start a task: /build TASK",
+    "/chat": "Switch back to chat mode",
     "/views": "Read-only agent panes (q returns); also: agentdock watch in another terminal",
     "/help": "Show chat commands",
     "/agents": "List configured agents",
@@ -1447,18 +1487,16 @@ def agent_display(config: dict[str, Any], name: str) -> str:
     return f"{name} [{agent['backend']}, model={model}]"
 
 
-def agent_prompt(config: dict[str, Any], name: str) -> str:
+def agent_status(config: dict[str, Any], name: str, usage=None) -> str:
+    count = " · " + token_label(*usage) if usage is not None else ""
     if config.get("chat_mode") == "build":
         stages = config["workflow"]
         route = f"plan:{stages['planner_agent']} → code:{stages['worker_agent']}"
         if config["final_codex_review"]:
             route += f" → review:{stages['reviewer_agent']}"
-        prompt = ui.styled("  BUILD", "accent") + ui.styled(f"  {route}", "muted") + ui.styled("\n  ❯ ")
-        return re.sub(r"(\x1b\[[0-9;]*m)", r"\001\1\002", screen.paint_prompt(prompt))
-    backend = config["agents"][name]["backend"]
+        return plain_text(f"  BUILD{count}  {route}").replace("\n", " ")
     model = config["agents"][name].get("model") or "provider default"
-    prompt = ui.styled(f"  {name}") + ui.styled(f"  {model}", "muted") + ui.styled("\n  ❯ ")
-    return re.sub(r"(\x1b\[[0-9;]*m)", r"\001\1\002", screen.paint_prompt(prompt))
+    return plain_text(f"  CHAT · {name}{count}  {model}").replace("\n", " ")
 
 
 def print_chat_header(repo: Path, config: dict[str, Any], agent_name: str) -> None:
@@ -1511,13 +1549,19 @@ def set_agent_model(repo: Path, config: dict[str, Any], agent_name: str, value: 
         success(f"{agent_name} model set to {config['agents'][agent_name].get('model') or '(default)'}")
 
 
-def configure_readline(config: dict[str, Any]) -> None:
+def chat_completions(config: dict[str, Any]) -> list[str]:
     words = sorted(set(CHAT_COMMANDS) | {f"/agent {name}" for name in config["agents"]})
     words.extend(f"/model {agent['model']}" for agent in config["agents"].values() if agent.get("model"))
     for suggestions in MODEL_SUGGESTIONS.values():
         words.extend(f"/model {model}" for model in suggestions)
         words.extend(f"/model set {model}" for model in suggestions)
     words.extend(["/model reset", "/model default"])
+    words.extend(["/mode chat", "/mode build"])
+    return sorted(set(words))
+
+
+def configure_readline(config: dict[str, Any]) -> None:
+    words = chat_completions(config)
     matches: list[str] = []
 
     def complete(text: str, state: int) -> Optional[str]:
@@ -1595,10 +1639,30 @@ def open_native_agent(repo: Path, config: dict[str, Any], agent_name: str) -> No
 
 
 def chat_loop(repo: Path, config: dict[str, Any], initial_agent: Optional[str], first_message: Optional[str]) -> None:
+    # A new interactive session always opens as a conversation. Explicit agent
+    # selection and saved custom chat-agent preferences remain available.
+    if first_message is None:
+        config["chat_mode"] = "chat"
     agent_name = initial_agent or str(config["default_chat_agent"])
     if agent_name not in config["agents"]:
         raise WorkflowError(f"Unknown agent: {agent_name}")
     histories: dict[str, list[dict[str, str]]] = {}
+    last_usage = {}
+    chat_input = None
+
+    def measured(key, function, *args):
+        reports = {}
+        token = CURRENT_USAGE.set(reports)
+        try:
+            status_config = dict(config, chat_mode="build" if key == "build" else "chat")
+            label = agent_status(status_config, agent_name, last_usage.get(key))
+            with chat_input.running(label) if chat_input is not None else nullcontext():
+                return function(*args)
+        finally:
+            CURRENT_USAGE.reset(token)
+            last_usage[key] = (sum(value[0] for value in reports.values()),
+                               any(value[1] for value in reports.values())) if reports else None
+
 
     def handle(message: str) -> None:
         nonlocal agent_name
@@ -1642,12 +1706,11 @@ def chat_loop(repo: Path, config: dict[str, Any], initial_agent: Optional[str], 
         if text == "/mode":
             print(f"Mode: {config.get('chat_mode', 'chat')}. Use /mode build or /mode chat.")
             return
-        if text.startswith("/mode "):
-            mode = text.split(None, 1)[1]
+        if text in {"/chat", "/build"} or text.startswith("/mode "):
+            mode = text[1:] if text in {"/chat", "/build"} else text.split(None, 1)[1]
             if mode not in {"chat", "build"}:
                 raise WorkflowError("Use /mode build or /mode chat.")
             config["chat_mode"] = mode
-            save_config(repo, config)
             success(f"Input mode: {mode}")
             return
         if text == "/views":
@@ -1697,7 +1760,7 @@ def chat_loop(repo: Path, config: dict[str, Any], initial_agent: Optional[str], 
             open_native_agent(repo, config, agent_name)
             return
         if text.startswith(("/run ", "/build ")):
-            workflow(repo, text.split(None, 1)[1], config)
+            measured("build", workflow, repo, text.split(None, 1)[1], config)
             return
         if text == "/status":
             print(f"repo: {repo}")
@@ -1722,12 +1785,14 @@ def chat_loop(repo: Path, config: dict[str, Any], initial_agent: Optional[str], 
         if text.startswith("/"):
             raise WorkflowError(f"Unknown command: {text}. Type /help.")
         if config.get("chat_mode") == "build":
-            workflow(repo, text, config)
+            measured("build", workflow, repo, text, config)
             return
-        status(config["agents"][agent_name]["backend"], f"{agent_name} thinking...")
+        backend = config["agents"][agent_name]["backend"]
+        if backend != "aider_ollama":
+            status(backend, f"{agent_name} thinking...")
         history = histories.setdefault(agent_name, [])
         context = "Previous conversation (JSON):\n" + json.dumps(history) + "\n\nCurrent message:\n" + text if history else text
-        response = run_chat_agent(repo, config, agent_name, context)
+        response = measured(agent_name, run_chat_agent, repo, config, agent_name, context)
         history.extend([{"role": "user", "content": tail(text, 12000)}, {"role": "assistant", "content": tail(response, 12000)}])
         while len(history) > 2 and (len(history) > 12 or sum(len(item["content"]) for item in history) > 24000):
             del history[:2]
@@ -1739,9 +1804,10 @@ def chat_loop(repo: Path, config: dict[str, Any], initial_agent: Optional[str], 
 
     configure_readline(config)
     print_chat_header(repo, config, agent_name)
+    chat_input = ChatInput()
     while True:
         try:
-            handle(input(agent_prompt(config, agent_name)))
+            handle(chat_input.read(agent_status(config, agent_name, last_usage.get("build" if config.get("chat_mode") == "build" else agent_name)), chat_completions(config)))
         except EOFError:
             print("bye")
             return
@@ -1777,7 +1843,7 @@ def build_parser(prog: str = "agentdock") -> argparse.ArgumentParser:
     chat_parser.add_argument("message", nargs="?", help="single message; omit for interactive chat")
     chat_parser.add_argument("--agent", help="agent name")
     chat_parser.add_argument("--fullscreen", action=argparse.BooleanOptionalAction, default=True,
-                             help="temporary dark full-screen workspace (default for interactive chat; --no-fullscreen for panel-only)")
+                             help="dark workspace with native scrollback (default for interactive chat; --no-fullscreen for panel-only)")
 
     doctor_parser = subparsers.add_parser("doctor", help="check dependencies and Ollama")
     doctor_parser.add_argument("--no-gradle", action="store_true", help="Gradle is no longer required")
@@ -1810,6 +1876,7 @@ def main(argv: Optional[Sequence[str]] = None, *, prog: str = "agentdock") -> No
         raw_args = ["run", *raw_args]
     args = build_parser(prog).parse_args(raw_args)
     session_token = SESSION_MODELS.set({})
+    ready_token = SESSION_READY.set(set())
     try:
         repo = find_repo(Path.cwd(), require_git=False)
         if args.command == "watch":
@@ -1861,6 +1928,7 @@ def main(argv: Optional[Sequence[str]] = None, *, prog: str = "agentdock") -> No
             cleanup_session_models()
         finally:
             SESSION_MODELS.reset(session_token)
+            SESSION_READY.reset(ready_token)
 
 
 if __name__ == "__main__":

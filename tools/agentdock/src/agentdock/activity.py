@@ -18,6 +18,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from .usage import token_label
+
 
 class Activity:
     def __init__(self, state: Path, agent: str, command: str):
@@ -38,6 +40,10 @@ class Activity:
 
     def write(self, data: bytes) -> None:
         self.stream.write(data)
+
+    def set_usage(self, total: int, approximate: bool = False) -> None:
+        self.data.update(tokens=total, approximate_tokens=approximate)
+        self._save()
 
     def finish(self, status: str, code: int | None = None) -> None:
         self.stream.close()
@@ -147,10 +153,19 @@ def read_activities(state: Path) -> list[dict[str, Any]]:
     return sorted(records, key=lambda item: float(item.get("started", 0)), reverse=True)
 
 
+def activity_metrics(record):
+    if "started" not in record:
+        return ""
+    seconds = max(0, int(record.get("finished", time.time()) - record["started"]))
+    usage = token_label(record.get("tokens"), record.get("approximate_tokens", False),
+                        record.get("status") != "running")
+    return f"{seconds // 60:02d}:{seconds % 60:02d} · {usage}"
+
+
 def dashboard(state: Path, agent_names: list[str], *, once: bool = False) -> None:
     if once:
         for record in read_activities(state):
-            print(f"{record['agent']} · {record['status']}\n{record['text'][-3000:]}\n")
+            print(f"{record['agent']} · {record['status']} · {activity_metrics(record)}\n{record['text'][-3000:]}\n")
         return
     if not sys.stdin.isatty() or not sys.stdout.isatty():
         raise ValueError("Live views need a terminal. Use agentdock watch --once for a text snapshot.")
@@ -194,10 +209,11 @@ def dashboard(state: Path, agent_names: list[str], *, once: bool = False) -> Non
                 y = 3 + (index // columns) * cell_height
                 x = (index % columns) * cell_width
                 put(y, x, f"─ {pane['agent']} [{pane['status']}] " + "─" * cell_width, cell_width - 2, curses.A_BOLD)
+                put(y + 1, x, activity_metrics(pane), cell_width - 2)
                 lines = pane["text"].expandtabs(4).splitlines()
-                available = max(0, cell_height - 2)
+                available = max(0, cell_height - 3)
                 for offset, line in enumerate(lines[-available:] if available else []):
-                    put(y + offset + 1, x, line, cell_width - 2)
+                    put(y + offset + 2, x, line, cell_width - 2)
             screen.refresh()
             key = screen.getch()
             if key in (ord("q"), 27):
