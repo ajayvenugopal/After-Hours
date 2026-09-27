@@ -1,0 +1,22 @@
+# Local dependencies, generated files and IDE metadata
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+*.iml
+.idea/
+.DS_Store
+# Keep existing local configuration and certificates private
+.env
+.env.*
+!.env.example
+certificates/
+*.pem
+*.key
+
+# Original Express spike retained locally, superseded by Next.js API routes
+.legacy-prototype/
+# Browser verification artifacts
+playwright-report/
+test-results/
