@@ -1,0 +1,19 @@
+# Local state and generated output
+.legacy-prototype/
+node_modules/
+.next/
+.build/
+.idea/
+*.iml
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+test-results/
+playwright-report/
+# Local credentials; share only placeholders
+.env
+.env.*
+!.env.example
+certificates/
+*.pem
+*.key

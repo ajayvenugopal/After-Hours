@@ -1,4 +1,4 @@
-"""Optional alternate-screen presentation; never changes terminal profiles."""
+"""Optional painted workspace that preserves native terminal scrollback."""
 import os
 import sys
 from contextlib import contextmanager
@@ -6,6 +6,20 @@ from contextlib import contextmanager
 from . import ui
 
 _active = None
+
+
+def workspace_palette():
+    if os.environ.get("COLORTERM", "").lower() in {"truecolor", "24bit"}:
+        return "#101219", "#e6e1ef", "\033[48;2;16;18;25m", "\033[38;2;230;225;239m"
+    if "256color" in os.environ.get("TERM", ""):
+        return "#121212", "#dadada", "\033[48;5;233m", "\033[38;5;253m"
+    return "ansiblack", "ansiwhite", "\033[40m", "\033[37m"
+
+
+def workspace_background():
+    if _active and "NO_COLOR" not in os.environ and ui.theme != "mono":
+        return workspace_palette()[2]
+    return ""
 
 
 def paint_prompt(text):
@@ -21,7 +35,11 @@ class PaintedStream:
         self.base = base
 
     def write(self, text):
-        self.stream.write(text.replace("\033[0m", "\033[0m" + self.base))
+        # Paint the remainder of each completed line before it enters history,
+        # and the new line after scrolling. Never erase the screen or history.
+        painted = text.replace("\033[0m", "\033[0m" + self.base)
+        painted = painted.replace("\n", "\033[K\n" + self.base + "\033[K")
+        self.stream.write(painted)
         return len(text)
 
     def __getattr__(self, name):
@@ -31,15 +49,11 @@ class PaintedStream:
 class Screen:
     def __init__(self):
         self.stdout, self.stderr = sys.stdout, sys.stderr
-        if os.environ.get("COLORTERM", "").lower() in {"truecolor", "24bit"}:
-            self.base = "\033[48;2;16;18;25m\033[38;2;230;225;239m"
-        elif "256color" in os.environ.get("TERM", ""):
-            self.base = "\033[48;5;233m\033[38;5;253m"
-        else:
-            self.base = "\033[40m\033[37m"
+        palette = workspace_palette()
+        self.base = palette[2] + palette[3]
 
     def enter(self):
-        self.stdout.write("\033[?1049h" + self.base + "\033[2J\033[H")
+        self.stdout.write(self.base + "\033[J")
         self.stdout.flush()
         sys.stdout = PaintedStream(self.stdout, self.base)
         if self.stderr.isatty():
@@ -47,7 +61,7 @@ class Screen:
 
     def leave(self):
         sys.stdout, sys.stderr = self.stdout, self.stderr
-        self.stdout.write("\033[0m\033[?25h\033[?1049l")
+        self.stdout.write("\033[0m\033[?25h")
         self.stdout.flush()
 
 
@@ -73,11 +87,14 @@ def fullscreen(enabled=False):
 @contextmanager
 def suspend():
     """Let native agents and curses dashboards own their terminal screen."""
+    global _active
     screen = _active
     if screen:
         screen.leave()
+        _active = None
     try:
         yield
     finally:
         if screen:
             screen.enter()
+            _active = screen

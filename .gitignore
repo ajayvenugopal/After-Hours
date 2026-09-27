@@ -31,3 +31,24 @@ coverage.xml
 *.keystore
 *.jks
 *.log
+/tools/agentdock/docs/
+
+# Build output and local framework caches (at any project depth)
+.build/
+.swiftpm/
+.next/
+.nuxt/
+.output/
+.vercel/
+.turbo/
+.cache/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+# Browser-test output
+playwright-report/
+test-results/
+# Superseded local prototypes and IDE module files
+.legacy-prototype/
+*.iml

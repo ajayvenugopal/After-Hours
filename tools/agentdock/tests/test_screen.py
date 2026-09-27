@@ -22,9 +22,10 @@ class ScreenTests(unittest.TestCase):
             import sys
             self.assertIs(sys.stdout, output)
             self.assertIs(sys.stderr, errors)
-        self.assertIn("\033[?1049h", output.getvalue())
+        self.assertNotIn("\033[?1049", output.getvalue())
+        self.assertNotIn("\033[2J", output.getvalue())
         self.assertIn("\033[0m\033[48;5;233m", output.getvalue())
-        self.assertTrue(output.getvalue().endswith("\033[?1049l"))
+        self.assertTrue(output.getvalue().endswith("\033[0m\033[?25h"))
         self.assertNotIn("\033]", output.getvalue())
 
     def test_plain_and_disabled_modes_do_not_take_over(self):
@@ -47,5 +48,19 @@ class ScreenTests(unittest.TestCase):
                 with screen.suspend():
                     import sys
                     self.assertIs(sys.stdout, output)
-        self.assertEqual(output.getvalue().count("\033[?1049h"), 2)
-        self.assertEqual(output.getvalue().count("\033[?1049l"), 2)
+                    self.assertEqual(screen.paint_prompt("native"), "native")
+                self.assertTrue(screen.paint_prompt("chat").startswith(screen._active.base))
+        self.assertNotIn("\033[?1049", output.getvalue())
+        self.assertEqual(output.getvalue().count("\033[0m\033[?25h"), 2)
+
+    def test_long_output_keeps_every_line_and_paints_blank_lines(self):
+        output = Terminal()
+        stream = screen.PaintedStream(output, "\033[40m")
+        for index in range(200):
+            text = f"line {index}\033[0m\n\n"
+            self.assertEqual(stream.write(text), len(text))
+        expected = "".join(
+            f"line {index}\033[0m\033[40m\033[K\n\033[40m\033[K\033[K\n\033[40m\033[K"
+            for index in range(200)
+        )
+        self.assertEqual(output.getvalue(), expected)

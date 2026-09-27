@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "AgentDock: cloud planning and review with local coding agents"
 readme = "README.md"
 requires-python = ">=3.9"
+dependencies = ["prompt-toolkit>=3.0.50,<4"]
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["coding-agents", "terminal", "ollama", "orchestration"]

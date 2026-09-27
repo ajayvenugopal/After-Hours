@@ -1,0 +1,30 @@
+name: Gp Notes
+on:
+  push:
+    paths: ['apps/Gp Notes/**', '.github/workflows/gp-notes.yml']
+  pull_request:
+    paths: ['apps/Gp Notes/**', '.github/workflows/gp-notes.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/Gp Notes/Frontend/gp-notes
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/Gp Notes/Frontend/gp-notes/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - run: npm audit --audit-level=high

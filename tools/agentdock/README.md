@@ -102,20 +102,26 @@ Interactive chat uses the dark workspace by default:
 agentdock
 ```
 
-This mode paints an alternate terminal screen with a dark background,
+This mode paints terminal output with a dark background,
 light text and the selected accent theme. It does not modify your Terminal profile
 or use terminal-default color changes. Normal exit and handled errors restore the
-previous terminal screen. Apple Terminal uses compatible ANSI colors; exact shades
+terminal text attributes and retain the chat in normal scrollback. Apple Terminal uses compatible ANSI colors; exact shades
 depend on terminal support. Resize-aware panels keep the layout within the terminal.
 
 Native `/code` sessions and `/views` temporarily take over with their own UI;
-returning opens a fresh AgentDock screen. Alternate-screen scrollback depends on
-your terminal, so use saved logs for earlier output. `NO_COLOR`, mono theme,
+returning resumes the painted workspace without clearing earlier output.
+Use normal terminal scrolling to read earlier responses. `NO_COLOR`, mono theme,
 redirected input/output and dumb terminals skip full-screen mode. Force-killing
 the process cannot guarantee restoration; use your terminal's Reset command if needed.
-Run `agentdock --no-fullscreen` for the panel-only appearance and normal terminal
-scrollback. `--fullscreen` remains available to explicitly enable the default.
+Run `agentdock --no-fullscreen` for the panel-only appearance.
+`--fullscreen` remains available to explicitly enable the default painted workspace.
 One-shot messages and non-chat commands do not enter full-screen mode.
+
+New interactive sessions start in **chat mode**, using the local model by default.
+Use `/build` to switch modes; ordinary messages then start the staged build workflow.
+Use `/chat` to return to conversation. `/mode chat` and `/mode build` are aliases.
+`/build TASK` runs one build without changing the current mode. Explicit `--agent`
+and saved `/default` agent choices still apply.
 
 ## Quick start
 
@@ -552,11 +558,17 @@ During local coding, compact output shows brief Aider narration and applied-file
 messages, while keeping code blocks and tool banners out of the terminal. Long
 invocations display a live spinner and elapsed-time timer in interactive terminals.
 This is observable tool activity, not access to hidden model reasoning. If the
-model emits no progress text, only the elapsed-time indicator can be shown.
+model emits no progress text, the timer continues while token usage is pending.
 
 Codex, Claude, local chat, Aider coding and Ollama model loading all display the
 timer. It updates in place, clears when progress text arrives, and shows total
-elapsed time at completion. Redirected output uses plain updates every 15 seconds
+elapsed time at completion. Mode, model and reported token usage appear in a
+footer below the input field, cleared on submission so they do not repeat in
+conversation history. Chat shows the last
+response's usage; build shows the total reported across its agent invocations.
+Missing counts are omitted, and rounded counts use `≈`. Detailed usage remains
+available in `/views` and `watch --once`. Native sessions retain their own UI.
+Redirected output uses plain updates every 15 seconds
 instead of terminal controls. Native `/code` sessions keep their provider's own UI.
 Cloud prompts and tool output stay hidden in compact mode; completed plans and
 reviews are printed once.
@@ -637,6 +649,7 @@ tracked by the launcher's cleanup.
 | `/model MODEL_ID`, `/model set MODEL_ID` | Set the selected agent's model. |
 | `/model reset` | Clear its model override. |
 | `/workflow`, `/workflow setup` | Inspect or configure build stages. |
+| `/chat`, `/build` | Switch between conversation and the build workflow for this session. |
 | `/mode`, `/mode chat`, `/mode build` | Inspect or change how ordinary messages are handled. |
 | `/build TASK`, `/run TASK` | Run the staged workflow for one task. |
 | `/code`, `/native` | Open the selected agent's native coding interface. |
@@ -711,7 +724,7 @@ shows stage settings you can merge into the generated file:
 | `version` | Schema version; currently `2`. |
 | `agents` | Named agents: `backend`, `auth`, `model`, `role`, `lifetime`, `timeout_seconds`. |
 | `default_chat_agent` | Startup chat/native agent; initially `local`. |
-| `chat_mode` | `chat` or `build`; initially `chat`. |
+| `chat_mode` | `chat` or `build` for one-shot messages; interactive sessions always start in `chat`. |
 | `theme` | `violet` (default), `amber`, or `mono`; saved per project. |
 | `output_mode` | `compact` by default; `raw` streams all provider output and the final diff. |
 | `workflow` | Agent assignments for planning, local work, review and debugging. |
