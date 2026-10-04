@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/agentdock-title.png" alt="AgentDock: Cloud judgment. Local execution. Python coordinates planning with Codex or Claude, local coding and repairs, cloud review, then local fixes and verification. Paid agents stop during local work." width="1200" />
+  <img src="docs/assets/agentdock-hand-drawn.png" alt="Hand-drawn AgentDock workflow: Cloud judgment. Local execution. Plan with Codex or Claude, build and repair locally with Aider and Ollama, then return for cloud review and final local checks. Paid agents stop during local work." width="1200" />
 </p>
 
 # AgentDock · Your terminal, your agents
@@ -843,8 +843,8 @@ PYTHONPATH=src python3 -m agentdock --help
 
 Python orchestrates subprocess boundaries; JSON and Markdown carry handoffs; a
 curses dashboard displays activity. The generated title banner lives at
-[`docs/assets/agentdock-title.png`](docs/assets/agentdock-title.png); its
-[generation prompt](docs/assets/agentdock-title-prompt.md) is included for future edits.
+[`docs/assets/agentdock-hand-drawn.png`](docs/assets/agentdock-hand-drawn.png); its
+[generation prompt](docs/assets/agentdock-hand-drawn-prompt.md) is included for future edits.
 The editable [terminal workspace illustration](docs/assets/agentdock-overview.svg)
 is retained separately. Both images are stored locally with no external image dependency.
 
