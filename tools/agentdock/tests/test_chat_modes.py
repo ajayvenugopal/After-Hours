@@ -49,7 +49,7 @@ class ChatModeTests(unittest.TestCase):
             CURRENT_USAGE.get()['planner'] = (100, False)
             CURRENT_USAGE.get()['worker'] = (200, True)
 
-        with patch('agentdock.cli.ChatInput.read', side_effect=lambda status, words: read(status)), patch('builtins.print'), patch(
+        with patch('agentdock.cli.ChatInput.read', side_effect=lambda status, words, **options: read(status)), patch('builtins.print'), patch(
                 'agentdock.cli.configure_readline'), patch('agentdock.cli.run_chat_agent', side_effect=chat), patch(
                 'agentdock.cli.workflow', side_effect=build):
             chat_loop(Path('/tmp'), config, None, None)

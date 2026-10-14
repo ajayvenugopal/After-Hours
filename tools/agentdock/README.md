@@ -642,6 +642,7 @@ tracked by the launcher's cleanup.
 | Command | Purpose |
 | --- | --- |
 | `/help` | Show commands. |
+| `/usage`, `/usage codex` | Show live Codex account limits, remaining percentages and reset times. |
 | `/theme`, `/theme violet`, `/theme amber`, `/theme mono` | Show or change the terminal theme. |
 | `/create`, `/agents` | Create an agent or list configured agents. |
 | `/agent NAME`, `/default` | Select a chat/native agent or save it as startup default. |
@@ -662,9 +663,22 @@ tracked by the launcher's cleanup.
 | `/new` | Clear the selected chat agent's in-memory context. |
 | `/exit`, `/quit` | Exit and attempt session-model cleanup. |
 
-Tab completion is available for launcher commands, agent names and configured
-models. Ctrl-C cancels the current operation and returns to chat where possible;
+Type `/` to see a live command menu with descriptions; keep typing to filter it.
+Use arrow keys and Tab to choose a suggestion. Argument suggestions cover agents,
+configured models (including `/model set`), themes, modes, output and workflow setup.
+Suggestions run locally without model calls, and input history stays in memory for
+this session. Minimal source checkouts without prompt-toolkit retain readline Tab
+completion; redirected input retains standard line input. Ctrl-C cancels the current
+operation and returns to chat where possible;
 it does not exit chat. Use `/exit` or EOF to leave.
+
+### Codex account usage
+
+`/usage` reads account limits through the installed Codex app-server using its
+existing login. It works with any selected AgentDock agent and makes no model
+calls. Limits are shared across Codex sessions; API-key-only accounts may not
+expose subscription limits. Missing windows are shown as unavailable, and reset
+times use local time.
 
 ### From your shell
 

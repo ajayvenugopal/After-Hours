@@ -26,7 +26,8 @@ from typing import Any, Iterable, Optional, Sequence
 from .activity import Activity, capture_native, dashboard, plain_text
 from .file_diff import BASELINE, snapshot, file_diff, diff_snapshots, is_tool_artifact
 from .progress import LocalProgress, ElapsedTimer
-from .usage import TokenUsage, token_label
+from .usage import TokenUsage, token_label, UsageError, read_codex_usage, usage_lines
+from .completion import suggestions
 from .chat_input import ChatInput
 from . import ui
 from . import screen
@@ -1424,6 +1425,7 @@ CHAT_COMMANDS = {
     "/chat": "Switch back to chat mode",
     "/views": "Read-only agent panes (q returns); also: agentdock watch in another terminal",
     "/help": "Show chat commands",
+    "/usage": "Show live Codex account usage limits and reset times",
     "/agents": "List configured agents",
     "/create": "Create an agent interactively",
     "/default": "Make the selected agent the startup default",
@@ -1561,29 +1563,17 @@ def chat_completions(config: dict[str, Any]) -> list[str]:
 
 
 def configure_readline(config: dict[str, Any]) -> None:
-    words = chat_completions(config)
     matches: list[str] = []
 
     def complete(text: str, state: int) -> Optional[str]:
         nonlocal matches
         if state == 0:
-            buffer = readline.get_line_buffer()
-            if buffer.startswith("/agent "):
-                prefix = buffer[len('/agent '):]
-                matches = [name for name in sorted(config["agents"]) if name.startswith(prefix)]
-            elif buffer.startswith("/model "):
-                prefix = buffer[len('/model '):]
-                configured = sorted(
-                    str(agent["model"]) for agent in config["agents"].values() if agent.get("model")
-                )
-                matches = [model for model in sorted(set(configured + ["reset", "default"])) if model.startswith(prefix)]
-            else:
-                matches = [word for word in words if word.startswith(text)]
-        try:
-            value = matches[state]
-        except IndexError:
-            return None
-        return value + (" " if value.startswith("/") else "")
+            buffer = readline.get_line_buffer()[:readline.get_endidx()]
+            start = readline.get_begidx()
+            matches = [value[start:] for value, _ in suggestions(config, CHAT_COMMANDS, buffer)]
+            if buffer.startswith("/model "):
+                matches = list(dict.fromkeys(matches + [word[start:] for word in chat_completions(config) if word.startswith(buffer)]))
+        return matches[state] if state < len(matches) else None
 
     readline.set_completer(complete)
     readline.set_completer_delims(" \t\n")
@@ -1671,6 +1661,12 @@ def chat_loop(repo: Path, config: dict[str, Any], initial_agent: Optional[str], 
             return
         if text in {"/exit", "/quit"}:
             raise EOFError
+        if text in {"/usage", "/usage codex"}:
+            try:
+                ui.panel("CODEX USAGE", usage_lines(read_codex_usage(repo, codex_subprocess_env())))
+            except UsageError as exc:
+                raise WorkflowError(str(exc)) from exc
+            return
         if text == "/help":
             print_chat_help()
             return
@@ -1807,7 +1803,7 @@ def chat_loop(repo: Path, config: dict[str, Any], initial_agent: Optional[str], 
     chat_input = ChatInput()
     while True:
         try:
-            handle(chat_input.read(agent_status(config, agent_name, last_usage.get("build" if config.get("chat_mode") == "build" else agent_name)), chat_completions(config)))
+            handle(chat_input.read(agent_status(config, agent_name, last_usage.get("build" if config.get("chat_mode") == "build" else agent_name)), chat_completions(config), config=config, commands=CHAT_COMMANDS))
         except EOFError:
             print("bye")
             return

@@ -9,8 +9,11 @@ class ChatInput:
     def __init__(self):
         self.session = None
         if sys.stdin.isatty() and sys.stdout.isatty() and os.environ.get('TERM') not in {'', 'dumb'}:
-            from prompt_toolkit import PromptSession
-            from prompt_toolkit.layout import Dimension, FormattedTextControl, HSplit, Window
+            try:
+                from prompt_toolkit import PromptSession
+                from prompt_toolkit.layout import Dimension, FormattedTextControl, HSplit, Window
+            except ImportError:
+                return
             from .terminal_output import WorkspaceOutput
 
             class DockPromptSession(PromptSession):
@@ -26,9 +29,9 @@ class ChatInput:
             # The renderer owns escape sequences; bypass the painted stream,
             # whose reset/newline rewriting would interfere with cursor tracking.
             output = WorkspaceOutput.from_pty(getattr(sys.stdout, 'stream', sys.stdout), term=os.environ.get('TERM'))
-            self.session = DockPromptSession(output=output, reserve_space_for_menu=0)
+            self.session = DockPromptSession(output=output, reserve_space_for_menu=8)
 
-    def read(self, status, words):
+    def read(self, status, words, *, config=None, commands=None):
         if self.session is None:
             return input('  ❯ ')
         from prompt_toolkit.completion import WordCompleter
@@ -54,11 +57,16 @@ class ChatInput:
             'bottom-toolbar': 'noreverse ' + base_style,
             'prompt': '#c4b5fd' if ui.theme == 'violet' else 'ansiyellow',
         }
+        if config is not None and commands is not None:
+            from .completion import command_completer
+            completer = command_completer(config, commands, words)
+        else:
+            completer = WordCompleter(words, sentence=True)
         return self.session.prompt(
             [('class:prompt', '  ❯ ')],
             bottom_toolbar=lambda: [('class:bottom-toolbar', status)],
-            completer=WordCompleter(words, sentence=True),
-            complete_while_typing=False,
+            completer=completer,
+            complete_while_typing=config is not None,
             style=Style.from_dict(palette),
             color_depth=color_depth,
         )
