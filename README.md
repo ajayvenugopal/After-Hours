@@ -16,6 +16,7 @@ get started.
 | :---: | --- | --- | --- |
 | <a href="tools/agentdock/README.md"><img src="tools/agentdock/docs/assets/agentdock-hand-drawn.png" alt="Hand-drawn AgentDock workflow: cloud planning, local coding and repairs, then cloud review" width="260" /></a> | [AgentDock](tools/agentdock/README.md) | Tool | **Your coding agents, one workspace.** Plan with cloud models, build with local models, and keep the handoffs in view. |
 | <a href="apps/Gp%20Notes/README.md"><img src="apps/Gp%20Notes/docs/workspace.png" alt="Gp Notes workspace" width="260" /></a> | [Gp Notes](apps/Gp%20Notes/README.md) | App | **From conversation to a considered draft.** Turn synthetic consultations into editable SOAP notes, then review and export. |
+| <a href="apps/TokenBar/README.md"><img src="apps/TokenBar/docs/menu-bar-preview.png" alt="TokenBar menu bar and usage panel with sample quota and reset times" width="260" /></a> | [TokenBar](apps/TokenBar/README.md) | macOS app | **Your AI allowance, at a glance.** Track Codex and Claude quota, reset countdowns, and confirmed-reset notifications from the menu bar. |
 
 ---
 
