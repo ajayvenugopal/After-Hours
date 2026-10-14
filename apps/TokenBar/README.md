@@ -14,6 +14,14 @@ A native macOS menu bar app for tracking AI usage and quota resets.
 - Local usage history, token totals, and a manual **Check reset now** button.
 - Optional Ollama, LM Studio, and Gemini usage capture.
 
+## Download for Mac
+
+[Download TokenBar for Mac](https://github.com/ajayvenugopal/After-Hours/releases/download/tokenbar-v0.1.0/TokenBar-0.1.0-universal.dmg) · macOS 13+ · Apple silicon and Intel
+
+Open the DMG, drag **TokenBar** into **Applications**, then launch it. The app appears in the menu bar.
+
+This preview is ad-hoc signed and **not notarized**. If macOS blocks it, try opening the app once, then go to **System Settings → Privacy & Security → Open Anyway**. Only override this for a download you trust. Provider connections use the same setup below.
+
 ## Build and run
 
 Requires **macOS 13+**, **Xcode Command Line Tools**, and **Swift 5.9+**. There are no third-party Swift dependencies. Run from this project’s directory:
@@ -25,7 +33,7 @@ open dist/TokenBar.app
 
 TokenBar appears in the menu bar. Click its icon to view usage; open settings to choose providers, display style, notifications, or launch at login. Copy `dist/TokenBar.app` to `/Applications` to keep it installed.
 
-The build is ad-hoc signed for local use. Public binary releases should be Developer ID signed and notarized; this repository does not include signing credentials.
+To produce the universal download, run `bash scripts/package-dmg.sh`. Build outputs stay in `dist/`. Developer ID signing and notarization are required for a release that opens without a Gatekeeper override; signing credentials are not included.
 
 ## Connect your accounts
 

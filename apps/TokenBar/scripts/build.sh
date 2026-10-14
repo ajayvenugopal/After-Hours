@@ -1,8 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-swift build -c release
-BIN_DIR="$(swift build -c release --show-bin-path)"
+BUILD_ARGS=(-c release)
+if [ "${1:-}" = "--universal" ]; then
+    BUILD_ARGS+=(--arch arm64 --arch x86_64)
+elif [ "$#" -ne 0 ]; then
+    printf "Usage: %s [--universal]\n" "$0" >&2
+    exit 2
+fi
+swift build "${BUILD_ARGS[@]}"
+BIN_DIR="$(swift build "${BUILD_ARGS[@]}" --show-bin-path)"
 APP="dist/TokenBar.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/TokenBar" "$APP/Contents/MacOS/TokenBar"
