@@ -1,5 +1,9 @@
 # Codex dashboard
 
+![Codex Dashboard welcome screen with dark surfaces and lavender accents](docs/dashboard-preview.png)
+
+*Welcome screen preview with no private session data.*
+
 A local mobile-friendly Codex session dashboard with a charcoal terminal-style interface, project-grouped history, a reply composer, and approval cards.
 
 ## Run
