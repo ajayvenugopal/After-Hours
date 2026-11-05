@@ -1,27 +1,14 @@
 # Migration history
 
-## Initial import — 2026-09-27
+The original prototype was imported into Afterhours on 2026-09-27, preserving
+local configuration, dependencies and certificates. Version 0.2.0 replaced its
+fragmented UI and duplicated APIs; see CHANGELOG.md.
 
-Initially imported Gp Notes into Afterhours, preserving local
-configuration, certificates and dependencies. The source was not a Git repository.
-Initial verification found five lint errors, five warnings and two type errors.
+Gp Notes now lives at `apps/Gp Notes/`, with the application in `Frontend/gp-notes/`.
+The package and CI workflow use `gp-notes`. The original Express spike is kept
+only in ignored `.legacy-prototype/`; environment files and certificates are ignored.
 
-## Publication preparation — 0.2.0
-
-Replaced the original UI and duplicated API logic with a single workspace and
-validated service/provider modules. The original build and lint failures were
-addressed by the replacement. See CHANGELOG.md for behavior changes and
-`docs/TESTING.md` for current verification.
-
-The original Express spike is retained only in ignored `.legacy-prototype/` on
-the maintainer's machine. Existing frontend env files and certificates remain
-ignored. Live mode now requires explicit opt-in and a new workspace token; old
-clinic demo keys no longer grant access. Browser data left by the prototype is
-cleared on mount. No new consultation content is persisted by the application.
-
-## App classification and naming
-
-Gp Notes now lives at `apps/Gp Notes/`, with the Next.js application in
-`Frontend/gp-notes/`. The collection catalog, commands and CI paths use the
-new location. The npm package and workflow use the filesystem-friendly slug
-`gp-notes`.
+After untracked source files were removed locally, application sources were
+recovered from local source maps and browser tests from the transform cache.
+Configuration, service tests and documentation were restored before Git staging.
+Generated caches are recovery inputs only, not repository content.

@@ -1,73 +1,24 @@
 # Afterhours
 
-**Apps, tools, and experiments built after hours.**
+![Afterhours — Off the clock. Into the build. A late-night builder brings ideas to life at a warmly lit desk.](docs/assets/afterhours-banner.png)
 
-A personal collection of projects developed at home, from AI agents to everyday
-tools. Each project has its own setup guide, dependencies, tests, and release notes.
-Start with one tool; install only what it needs.
+**Off the clock. Into the build.**
 
-## Explore the tools
+Afterhours is where spare-time ideas become apps, tools, and experiments worth
+sharing. Built in evenings and weekends, these projects explore practical ways to
+make everyday work easier—from turning conversations into clinical notes to
+bringing coding agents together in one terminal.
 
-| Tool | What it does | Category | Status |
-| --- | --- | --- | --- |
-| [AgentDock](tools/agentdock/README.md) | Plan with Codex or Claude, implement with a local model, then return for review. | Coding workflow | Experimental |
+Explore the projects below. Each has its own README with the details you need to
+get started.
 
-### AgentDock
+| Preview | Project | Type | What it does |
+| :---: | --- | --- | --- |
+| <a href="tools/agentdock/README.md"><img src="tools/agentdock/docs/assets/agentdock-hand-drawn.png" alt="Hand-drawn AgentDock workflow: cloud planning, local coding and repairs, then cloud review" width="260" /></a> | [AgentDock](tools/agentdock/README.md) | Tool | **Your coding agents, one workspace.** Plan with cloud models, build with local models, and keep the handoffs in view. |
+| <a href="apps/Gp%20Notes/README.md"><img src="apps/Gp%20Notes/docs/workspace.png" alt="Gp Notes workspace" width="260" /></a> | [Gp Notes](apps/Gp%20Notes/README.md) | App | **From conversation to a considered draft.** Turn synthetic consultations into editable SOAP notes, then review and export. |
+| <a href="apps/TokenBar/README.md"><img src="apps/TokenBar/docs/menu-bar-preview.png" alt="TokenBar menu bar and usage panel with sample quota and reset times" width="260" /></a> | [TokenBar](apps/TokenBar/README.md)<br>[Download for Mac](https://github.com/ajayvenugopal/After-Hours/releases/download/tokenbar-v0.1.0/TokenBar-0.1.0-universal.dmg) | macOS app | **Your AI allowance, at a glance.** Track Codex and Claude quota, reset countdowns, and confirmed-reset notifications from the menu bar. |
+| — | [Codex Dashboard](tools/codex-dashboard/README.md) | Tool · Experimental | Browse local Codex sessions, chat history, and command output from desktop or mobile. Includes a reply composer and support for daemon-delivered approval requests, with optional private Tailscale access. See its README for setup and approval limitations. |
 
-<p align="center">
-  <a href="tools/agentdock/README.md">
-    <img src="tools/agentdock/docs/assets/agentdock-title.png" alt="AgentDock: cloud planning, local coding and repairs, cloud review, then final verification." width="1100" />
-  </a>
-</p>
+---
 
-A terminal workspace with named agents, configurable models, local repair loops,
-and clear handoffs between planning, coding, and review. Paid agents exit while
-the local model works.
-
-From your local checkout:
-
-```bash
-cd tools/agentdock
-python3 scripts/install.py
-agentdock
-```
-
-The installer requires `uv`. See the [complete setup guide](tools/agentdock/README.md#quick-start)
-for provider CLIs, authentication and local models, and read AgentDock's
-[current security limitations](tools/agentdock/SECURITY.md) before use.
-
-## Repository layout
-
-```text
-Afterhours/
-├── README.md
-├── CONTRIBUTING.md
-├── LICENSE
-├── .github/workflows/
-└── tools/
-    └── agentdock/
-        ├── README.md
-        ├── pyproject.toml
-        ├── src/agentdock/
-        ├── tests/
-        ├── scripts/
-        └── docs/
-```
-
-New tools go under `tools/<tool-name>/` and get an entry in the catalog above.
-There is no shared runtime to install at the collection root.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the project structure and testing
-expectations. Keep local configuration, model files, credentials and session logs
-out of published changes.
-
-## License
-
-[MIT](LICENSE), unless a project explicitly specifies otherwise. Third-party
-models, providers and dependencies retain their own licenses and terms.
-
-## Codex Dashboard
-
-[Codex Dashboard](tools/codex-dashboard/README.md) is an experimental mobile-friendly viewer for local Codex sessions, chat history, and command output. It includes a reply composer and support for approval requests delivered by the shared Codex daemon. Access it locally or through your private Tailscale network. See the [setup and limitations](tools/codex-dashboard/README.md) before enabling remote access.
+[Contributing](CONTRIBUTING.md) · [MIT License](LICENSE)

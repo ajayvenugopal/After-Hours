@@ -2,18 +2,17 @@
 
 ## 0.2.0 — 2026-09-27
 
-- Replaced the fragmented prototype with a responsive source-and-draft workspace.
-- Added a free, fixed synthetic demo and opt-in text/audio provider workflows.
-- Added editable SOAP sections, review-before-export, clipboard and text download.
-- Removed hard-coded clinic keys, persistent browser consultation storage, sensitive
-  application logging, treatment-suggestion generation and misleading encryption copy.
-- Added request and output validation, size bounds, cancellation, timeouts and
-  shared per-process request/concurrency limits.
-- Retired the duplicate Express backend into an ignored local backup.
-- Updated vulnerable dependencies, added service/provider and browser tests, CI,
-  configuration examples, setup documentation and explicit security boundaries.
+- Replaced fragmented prototype screens with a responsive source-and-draft workspace.
+- Added a fixed synthetic demo and opt-in live text/audio workflows.
+- Added editable SOAP sections, explicit review, clipboard and text export.
+- Removed hard-coded access keys, consultation persistence, sensitive logging,
+  treatment-suggestion generation and misleading encryption claims.
+- Added input/output validation, bounded uploads, cancellation, timeouts and
+  shared process request/concurrency limits.
+- Retired the Express spike into an ignored local backup.
+- Updated vulnerable dependencies and added unit/provider tests, browser tests,
+  CI, setup documentation and security boundaries.
 
 ## 0.1.0 — imported prototype
 
-Voice capture, Whisper transcription and GPT-generated SOAP notes with a separate
-Express normalization spike. Imported into Afterhours without changing behavior.
+Voice capture, transcription and SOAP generation with a separate Express spike.

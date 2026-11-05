@@ -1,61 +1,60 @@
 # Security and data boundaries
 
-Gp Notes is a synthetic-data documentation experiment, not a product approved or
-validated for patient care. Publishing the source does not establish clinical,
-privacy or regulatory readiness.
+Gp Notes is a synthetic-data documentation experiment, not a product validated for
+patient care. Publishing its source does not establish clinical, privacy or
+regulatory readiness. Do not use actual patient information.
 
-## Data flow
+## Data handling
 
-Sample mode returns a bundled synthetic fixture and makes no provider requests.
-Live mode sends audio to OpenAI for transcription, then text for note generation;
-typed input goes directly to note generation. The OpenAI API key remains server-side.
-The workspace token is held in browser memory and sent in an Authorization header.
+Sample mode returns a bundled fixture without provider requests. Live mode sends
+audio to OpenAI for transcription and text for note generation. The provider key
+stays server-side. The workspace token is held in browser memory and sent in an
+Authorization header.
 
-The application does not write consultation data to a database, files, browser
-storage or logs. Browser state disappears on refresh or Clear session. The old
-prototype's three localStorage keys are removed on mount. This is not a secure
-memory-erasure guarantee. Clipboard contents and downloaded files persist outside
-the app. Browser extensions, operating systems, hosting infrastructure and the
-provider have their own data handling. Provider retention is not controlled by this
-app; disabling response storage is not a zero-retention guarantee.
+The app does not write consultation content to files, databases, browser storage
+or logs. Refresh or Clear session discards app state. The old prototype's three
+localStorage keys are removed on mount. This is not guaranteed secure memory
+erasure. Clipboard contents and downloaded files persist outside the app.
+Browser extensions, hosting infrastructure, operating systems and the provider
+have separate data handling. Disabling response storage does not guarantee zero
+provider retention.
 
-There is no end-to-end encryption feature. Use HTTPS for network transport. The
-server and provider process plaintext content. Do not use actual patient information.
+There is no end-to-end encryption feature: the server and provider process
+plaintext. Use HTTPS for transport.
 
-## Implemented controls
+## Controls
 
-- Live processing is disabled unless explicitly enabled with a provider key and a
-  workspace access token of at least 32 characters. No bundled live credentials.
-- Authentication runs before input parsing or provider requests. Token comparison
-  is timing-safe for equal-length values; browser cross-origin calls are rejected.
-- Streamed bodies are bounded, including requests without Content-Length. Text
-  and uploaded audio have separate size limits and accepted content types.
-- One process shares a 10-request/minute budget and a two-request concurrency cap
-  across both live routes. Invalid authenticated requests consume budget too.
-- Provider retries are disabled; requests carry cancellation and a 90-second
-  processing deadline. Cancelling a request may not prevent charges already incurred.
-- Generated output must match the strict schema and pass runtime validation.
-  Refusals, incomplete completions and malformed responses fail closed.
-- API responses use no-store. Error messages omit upstream exception details.
-  Security headers disable embedding, sniffing, camera and geolocation access.
+- Live processing requires explicit opt-in, a provider key and a workspace token
+  of at least 32 characters. No bundled token grants access.
+- Authentication precedes input parsing/provider calls, with timing-safe token
+  comparison for equal-length values and browser origin checks.
+- Streamed bodies have size bounds even without Content-Length; text/audio have
+  separate limits and accepted MIME types.
+- Both routes share a per-process budget of 10 requests/minute and two active
+  requests. Invalid authenticated requests also consume budget.
+- Provider retries are disabled; processing has a 90-second cancellation deadline.
+  Cancellation may not prevent charges for work already submitted.
+- Strict output schema plus runtime validation; refusals, incomplete output and
+  malformed responses are rejected.
+- No-store API responses and sanitized errors. Headers prohibit embedding and
+  sniffing and disable camera/geolocation access.
 
-## Remaining limitations
+## Limitations
 
-A shared token is not multi-user authentication. Limits reset on restart and are
-not coordinated between machines. MIME types are client declarations, not proof
-of file contents; the transcription provider must decode/validate the media.
-Request-body buffering, slow uploads and unauthenticated traffic also need ingress
-limits and timeouts. Use a restricted single-instance environment for live trials;
-add real authentication, distributed quotas and logging controls before broader use.
+One shared token is not multi-user authentication. Limits reset on restart and
+are not coordinated across machines. MIME labels are client declarations; the
+provider still must decode the media. Slow uploads and unauthenticated traffic
+need ingress limits/timeouts. Restrict live deployments and add appropriate
+identity, distributed quotas and infrastructure logging controls before expanding use.
 
-LLMs can omit, misattribute or invent content despite prompts and schemas. A review
-checkbox does not establish clinical safety. Browser recording and transcription
-can fail, particularly for silence, overlapping speech, accents or unsupported codecs.
-Clinical quality, regulatory suitability and accessibility have not been independently
-audited. Tests verify software behavior, not medical correctness.
+Models can omit, invent or misattribute information despite prompts and schemas.
+Review checkboxes do not establish medical safety. Recording and transcription
+vary with codecs, browsers, silence, accents and overlapping speech. Medical
+quality, regulatory suitability and accessibility have not been independently
+audited. Tests check software behavior, not clinical correctness.
 
 ## Reporting
 
-Do not post credentials, recordings, transcripts or patient information in public
-issues. Report a minimal synthetic reproduction to the repository owner. If a
-credential is exposed, revoke it at its issuing service and replace the local value.
+Report minimal synthetic reproductions to the repository owner. Never include
+credentials, patient information, transcripts or recordings in public issues.
+Revoke exposed credentials at their issuing service and replace local values.
