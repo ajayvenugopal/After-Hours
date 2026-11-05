@@ -67,3 +67,7 @@ out of published changes.
 
 [MIT](LICENSE), unless a project explicitly specifies otherwise. Third-party
 models, providers and dependencies retain their own licenses and terms.
+
+## Codex Dashboard
+
+[Codex Dashboard](tools/codex-dashboard/README.md) is an experimental mobile-friendly viewer for local Codex sessions, chat history, and command output. It includes a reply composer and support for approval requests delivered by the shared Codex daemon. Access it locally or through your private Tailscale network. See the [setup and limitations](tools/codex-dashboard/README.md) before enabling remote access.
