@@ -1,0 +1,1298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Codex dashboard</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #1c1c1c;
+        --side: #171717;
+        --line: #343434;
+        --muted: #929292;
+        --accent: #a9bdf4;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: #e6e6e6;
+        font:
+          13px/1.6 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+      }
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+        background: transparent;
+        color: inherit;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 7px 12px;
+      }
+      button:hover {
+        background: #333;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      input,
+      textarea,
+      select {
+        background: #252525;
+        color: inherit;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 10px;
+        outline: none;
+      }
+      input:focus,
+      textarea:focus,
+      button:focus-visible {
+        outline: 1px solid var(--accent);
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 290px minmax(0, 1fr);
+        height: 100dvh;
+      }
+      .sidebar {
+        background: var(--side);
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .brand {
+        padding: 22px 18px 16px;
+        font-size: 17px;
+        font-weight: 650;
+        letter-spacing: -0.5px;
+      }
+      .brand span {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--muted);
+        margin-left: 10px;
+        letter-spacing: 0;
+      }
+      .search {
+        margin: 0 12px 12px;
+        width: calc(100% - 24px);
+      }
+      .side-label {
+        padding: 0 18px 10px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      #list {
+        overflow: auto;
+        padding: 0 8px 20px;
+        flex: 1;
+      }
+      .project {
+        color: var(--muted);
+        font-size: 11px;
+        padding: 15px 10px 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .session {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        border-radius: 4px;
+        padding: 8px 10px;
+        margin: 2px 0;
+        color: #bdbdbd;
+      }
+      .session.active {
+        background: #343845;
+        color: #eff2ff;
+      }
+      .session-title {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .session-meta {
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .side-footer {
+        padding: 12px 18px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .workspace {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+      }
+      .topbar {
+        height: 65px;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+      }
+      .heading {
+        min-width: 0;
+        flex: 1;
+      }
+      #title {
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #path {
+        color: var(--muted);
+        font-size: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .back {
+        display: none;
+      }
+      .conversation {
+        flex: 1;
+        overflow: auto;
+        scrollbar-color: #444 transparent;
+        min-height: 0;
+      }
+      .messages {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 30px 36px 20px;
+      }
+      .message {
+        margin: 0 0 26px;
+      }
+      .message.user {
+        background: #2c2c2c;
+        border-left: 2px solid #929292;
+        padding: 12px 16px;
+        margin-top: 26px;
+      }
+      .role {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 7px;
+      }
+      .message.assistant .role {
+        color: #b5c5a4;
+      }
+      .text {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        line-height: 1.8;
+      }
+      .text code {
+        background: #303030;
+        padding: 1px 4px;
+        border-radius: 3px;
+      }
+      .text pre {
+        background: #151515;
+        padding: 16px;
+        border: 1px solid #333;
+        border-radius: 6px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .text pre code {
+        background: none;
+        padding: 0;
+      }
+      .text a {
+        color: #adbef2;
+      }
+      .empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 20vh 10px;
+      }
+      .empty b {
+        display: block;
+        color: #dedede;
+        font-size: 22px;
+        margin-bottom: 12px;
+      }
+      .bottom {
+        padding: 0 26px 14px;
+        flex-shrink: 0;
+      }
+      .bottom-inner {
+        max-width: 888px;
+        margin: auto;
+      }
+      .composer {
+        background: #303030;
+        border: 1px solid #454545;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .composer textarea {
+        resize: none;
+        display: block;
+        width: 100%;
+        min-height: 64px;
+        max-height: 180px;
+        background: transparent;
+        border: none;
+        padding: 4px;
+        outline: none;
+      }
+      .composer-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .send {
+        border: 0;
+        background: #d9d9d9;
+        color: #171717;
+        font-weight: bold;
+      }
+      .send:hover {
+        background: white;
+      }
+      .status {
+        color: var(--muted);
+        font-size: 11px;
+        min-height: 26px;
+        padding: 6px 2px;
+      }
+      .error {
+        color: #f4a5a5;
+      }
+      #jump {
+        display: block;
+        margin: 0 auto 8px;
+        background: #303030;
+      }
+      #jump[hidden],
+      [hidden] {
+        display: none !important;
+      }
+      .approvals {
+        max-height: 35dvh;
+        overflow: auto;
+      }
+      .approval {
+        border: 1px solid #736444;
+        background: #28251f;
+        padding: 14px;
+        margin-bottom: 10px;
+        border-radius: 6px;
+      }
+      .approval h3 {
+        font-size: 13px;
+        color: #e9ca88;
+        margin: 0 0 8px;
+      }
+      .approval pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 11px;
+        max-height: 200px;
+        overflow: auto;
+        background: #1c1b18;
+        padding: 10px;
+      }
+      .approval button {
+        margin-right: 8px;
+        margin-top: 8px;
+      }
+      .approval label {
+        display: block;
+        margin: 12px 0;
+      }
+      .approval input {
+        width: 100%;
+        margin-top: 6px;
+      }
+      .approve {
+        background: #d6c195;
+        color: #191919;
+      }
+      #connection {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .pill {
+        color: #d9bd7b;
+      }
+      @media (max-width: 700px) {
+        .app {
+          display: block;
+        }
+        .sidebar {
+          height: 100dvh;
+        }
+        .workspace {
+          display: none;
+          height: 100dvh;
+        }
+        body.open .sidebar {
+          display: none;
+        }
+        body.open .workspace {
+          display: flex;
+        }
+        .back {
+          display: block;
+        }
+        .topbar {
+          padding: 10px 14px;
+        }
+        .messages {
+          padding: 16px;
+        }
+        .bottom {
+          padding: 0 12px 10px;
+        }
+        .composer-footer span {
+          font-size: 10px;
+        }
+        #connection {
+          display: none;
+        }
+        .brand {
+          padding-top: 18px;
+        }
+      }
+      /* Observatory theme */
+      :root {
+        --bg: #101218;
+        --side: #0c0e14;
+        --line: #ffffff0d;
+        --muted: #858b9d;
+        --accent: #c0afff;
+      }
+      body {
+        font:
+          14px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: #e8eaf2;
+        background: #090b10;
+      }
+      body:before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          ellipse at 75% -20%,
+          #8060d920,
+          transparent 55%
+        );
+        z-index: 0;
+      }
+      .app {
+        position: relative;
+        grid-template-columns: 300px minmax(0, 1fr);
+      }
+      .sidebar {
+        background: linear-gradient(160deg, #14151f, #0d0f15 60%);
+        border-right: 1px solid #ffffff09;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 21px;
+        letter-spacing: -0.7px;
+        padding: 28px 24px;
+      }
+      .brand:before {
+        content: "✳";
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(145deg, #c7b9ff, #8671d1);
+        color: #211937;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px #ae8eff25;
+        font-size: 27px;
+      }
+      .brand span {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-left: 0;
+        color: #9388b5;
+      }
+      .search {
+        margin: 8px 18px 22px;
+        width: calc(100% - 36px);
+        background: #ffffff04;
+        border: 1px solid #ffffff0b;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 12px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .search:focus {
+        outline: none;
+        border-color: #a792df70;
+        box-shadow: 0 0 0 3px #a792df0c;
+      }
+      .side-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        padding: 0 24px 10px;
+      }
+      .project {
+        font-size: 10px;
+        letter-spacing: 0.3px;
+        padding: 20px 15px 8px;
+        color: #686f83;
+      }
+      #list {
+        padding: 0 12px 20px;
+        scrollbar-width: thin;
+        scrollbar-color: #ffffff16 transparent;
+      }
+      .session {
+        padding: 12px 14px;
+        border-radius: 10px;
+        margin: 3px 0;
+        transition:
+          background 0.18s,
+          color 0.18s,
+          transform 0.18s;
+        border: 1px solid transparent;
+      }
+      .session:hover {
+        background: #ffffff06;
+        transform: translateX(2px);
+      }
+      .session.active {
+        background: linear-gradient(110deg, #a58bee1a, #8d7ac30a);
+        border-color: #b49ae522;
+        color: #e2d8ff;
+        box-shadow: inset 3px 0 #b6a0ef;
+      }
+      .session-title {
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.65;
+      }
+      .session-meta {
+        display: block;
+        font-size: 10px;
+        color: #73798b;
+        margin-top: 4px;
+        padding-left: 14px;
+      }
+      .side-footer {
+        font-size: 10px;
+        padding: 18px 24px;
+        color: #646d82;
+        letter-spacing: 0.3px;
+      }
+      .side-footer:before {
+        content: "●";
+        color: #8dbfa8;
+        margin-right: 8px;
+      }
+      .workspace {
+        background:
+          radial-gradient(ellipse at 85% 0, #8168ba0c, transparent 50%), #101218;
+      }
+      .topbar {
+        height: 82px;
+        border-bottom: 1px solid #ffffff06;
+        padding: 16px 32px;
+        background: #11131acc;
+        backdrop-filter: blur(18px);
+      }
+      #title {
+        font-size: 14px;
+        font-weight: 550;
+        letter-spacing: -0.1px;
+      }
+      #path {
+        font-size: 11px;
+        margin-top: 4px;
+        color: #626b7f;
+      }
+      #connection {
+        font-size: 10px;
+        color: #91b9a8;
+        letter-spacing: 0.5px;
+        padding: 6px 10px;
+        border: 1px solid #8bc7aa18;
+        border-radius: 20px;
+        background: #84b69e05;
+      }
+      button {
+        transition:
+          background 0.2s,
+          transform 0.15s,
+          border-color 0.2s;
+        border-color: #ffffff10;
+      }
+      button:active {
+        transform: scale(0.97);
+      }
+      #refresh {
+        border-radius: 10px;
+        font-size: 18px;
+        width: 36px;
+        padding: 2px;
+        color: #979db0;
+      }
+      #refresh:hover {
+        transform: rotate(30deg);
+        background: #ffffff08;
+      }
+      .messages {
+        max-width: 880px;
+        padding: 40px 40px 28px;
+      }
+      .message {
+        margin-bottom: 34px;
+      }
+      .role {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.6px;
+        margin-bottom: 12px;
+        color: #838da3;
+      }
+      .message.assistant .role {
+        color: #b7a2e9;
+      }
+      .message.user {
+        margin: 24px 0 34px 12%;
+        background: linear-gradient(130deg, #252735, #1e2230);
+        border: 1px solid #ffffff09;
+        padding: 20px 24px;
+        border-radius: 18px 18px 4px 18px;
+        box-shadow: 0 8px 30px #0000000d;
+      }
+      .message.user .role {
+        color: #9cabc1;
+      }
+      .text {
+        font-size: 14px;
+        line-height: 1.85;
+        color: #c4c9d6;
+      }
+      .text strong {
+        color: #e9eaf3;
+        font-weight: 600;
+      }
+      .text code {
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        background: #a58bf011;
+        color: #d3bfff;
+        padding: 3px 6px;
+        border-radius: 5px;
+      }
+      .text pre {
+        background: #0b0d13;
+        border-color: #ffffff08;
+        border-radius: 12px;
+        padding: 22px;
+      }
+      .text a {
+        color: #c4b0ff;
+        text-underline-offset: 4px;
+      }
+      .bottom {
+        padding: 0 32px 22px;
+        background: linear-gradient(transparent, #101218 30%);
+      }
+      .bottom-inner {
+        max-width: 800px;
+      }
+      .composer {
+        background: linear-gradient(140deg, #222530, #1a1e28);
+        border: 1px solid #aab2d123;
+        border-radius: 18px;
+        padding: 14px 18px;
+        box-shadow:
+          0 12px 60px #00000030,
+          0 1px 0 #ffffff05 inset;
+        transition:
+          border-color 0.25s,
+          box-shadow 0.25s;
+      }
+      .composer:focus-within {
+        border-color: #b19be36b;
+        box-shadow:
+          0 12px 60px #00000030,
+          0 0 0 3px #a98ae908;
+      }
+      .composer textarea {
+        font: 14px/1.65 inherit;
+        min-height: 70px;
+        color: #e6e5ef;
+      }
+      .composer textarea::placeholder {
+        color: #687286;
+      }
+      .composer-footer {
+        padding-top: 8px;
+        font-size: 10px;
+      }
+      .send {
+        background: #c5b4f1;
+        color: #201a31;
+        border-radius: 10px;
+        padding: 8px 15px;
+        box-shadow: 0 2px 12px #b39bd51a;
+        font-size: 12px;
+      }
+      .send:hover {
+        background: #d5c4ff;
+        box-shadow: 0 3px 20px #b39bd530;
+        transform: translateY(-1px);
+      }
+      .status {
+        font-size: 10px;
+        text-align: center;
+        min-height: 23px;
+        padding-top: 8px;
+      }
+      .approval {
+        background: linear-gradient(135deg, #2b2621, #211f22);
+        border-color: #bba16c40;
+        border-radius: 14px;
+        padding: 18px;
+      }
+      .approval h3 {
+        font-size: 13px;
+      }
+      .approval pre {
+        border-radius: 8px;
+      }
+      .approve {
+        background: #dbc49b;
+        border: 0;
+        border-radius: 8px;
+      }
+      .empty {
+        padding: 19vh 20px 0;
+        font-size: 13px;
+        color: #7d859a;
+        animation: arrive 0.7s ease both;
+      }
+      .empty:before {
+        content: "✳";
+        display: block;
+        font-size: 68px;
+        font-weight: 300;
+        color: #bdabeb;
+        margin-bottom: 24px;
+        text-shadow: 0 0 70px #a17de885;
+        animation: breathe 6s ease-in-out infinite;
+      }
+      .empty b {
+        font-size: 34px;
+        font-weight: 500;
+        letter-spacing: -1.2px;
+        color: #e2deed;
+        margin-bottom: 12px;
+      }
+      #jump {
+        border-radius: 24px;
+        font-size: 11px;
+        padding: 8px 18px;
+        background: #252a37;
+        box-shadow: 0 4px 18px #0004;
+      }
+      ::selection {
+        background: #b098e544;
+      }
+      .conversation {
+        scrollbar-width: thin;
+        scrollbar-color: #ffffff18 transparent;
+      }
+      @keyframes arrive {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes breathe {
+        0%,
+        100% {
+          opacity: 0.75;
+          transform: scale(0.98);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.04);
+        }
+      }
+      @media (max-width: 700px) {
+        .brand {
+          padding: 22px;
+        }
+        .topbar {
+          height: 72px;
+          padding: 12px 16px;
+        }
+        .messages {
+          padding: 24px 20px;
+        }
+        .message.user {
+          margin-left: 6%;
+          padding: 16px 18px;
+        }
+        .bottom {
+          padding: 0 14px 12px;
+        }
+        .composer {
+          border-radius: 16px;
+          padding: 12px 14px;
+        }
+        .empty b {
+          font-size: 28px;
+        }
+        .text {
+          font-size: 14px;
+        }
+        .back {
+          border: 0;
+          font-size: 20px;
+          color: #bba5eb;
+        }
+        .approval {
+          padding: 14px;
+        }
+        .composer textarea {
+          font-size: 16px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *:before {
+          animation: none !important;
+          transition: none !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      .message.tool {
+        margin: 10px 0;
+        padding: 12px 16px;
+        background: #0c0f16;
+        border: 1px solid #ffffff0c;
+        border-radius: 8px;
+      }
+      .message.tool .role {
+        margin-bottom: 6px;
+        color: #a9b7cc;
+      }
+      .tool-output {
+        font:
+          11px/1.65 ui-monospace,
+          monospace;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-height: 320px;
+        overflow: auto;
+        margin: 0;
+        color: #aeb9ca;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">Codex <span>workspace</span></div>
+        <input
+          class="search"
+          id="search"
+          aria-label="Search sessions"
+          placeholder="Search sessions…"
+        />
+        <div class="side-label" id="count">Loading sessions…</div>
+        <div id="list"></div>
+        <div class="side-footer">Local sessions · private connection</div>
+      </aside>
+      <main class="workspace">
+        <header class="topbar">
+          <button class="back" aria-label="Back to sessions">←</button>
+          <div class="heading">
+            <div id="title">Codex</div>
+            <div id="path">Your sessions, wherever you work</div>
+          </div>
+          <span id="connection">Connecting…</span
+          ><button id="refresh" aria-label="Refresh sessions">↻</button>
+        </header>
+        <div class="conversation" id="scroll">
+          <div class="messages" id="messages">
+            <div class="empty">
+              <b>A little space. Big ideas.</b>Pick up where you left off. Your
+              next idea starts here.
+            </div>
+          </div>
+        </div>
+        <footer class="bottom" id="bottom" hidden>
+          <div class="bottom-inner">
+            <button id="jump" hidden>↓ Jump to latest</button>
+            <div class="approvals" id="approvals"></div>
+            <form class="composer" id="composer">
+              <textarea
+                id="prompt"
+                aria-label="Reply to session"
+                placeholder="Ask Codex to do anything"
+                rows="2"
+              ></textarea>
+              <div class="composer-footer">
+                <span id="model">Enter to send · Shift+Enter for newline</span
+                ><button
+                  class="send"
+                  id="send"
+                  type="submit"
+                  aria-label="Send message"
+                >
+                  ↑ Send
+                </button>
+              </div>
+            </form>
+            <div
+              class="status"
+              id="status"
+              role="status"
+              aria-live="polite"
+            ></div>
+          </div>
+        </footer>
+      </main>
+    </div>
+    <script>
+      const $ = (s) => document.querySelector(s),
+        el = (tag, text, cls) => {
+          const n = document.createElement(tag);
+          n.textContent = text;
+          if (cls) n.className = cls;
+          return n;
+        };
+      let rows = [],
+        selected = null,
+        version = 0,
+        token = null,
+        sending = false,
+        follow = true,
+        historySignature = "",
+        approvalSignature = "",
+        drafts = {},
+        state = { requests: [], states: {} };
+      async function api(url, data) {
+        const options =
+          data === undefined
+            ? {}
+            : {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Dashboard-Token": token,
+                },
+                body: JSON.stringify(data),
+              };
+        const r = await fetch(url, options);
+        let value;
+        try {
+          value = await r.json();
+        } catch {
+          throw Error("Unable to reach the dashboard or Codex daemon.");
+        }
+        if (!r.ok) throw Error(value.error || "Request failed");
+        return value;
+      }
+      function status(text, error = false) {
+        $("#status").textContent = text;
+        $("#status").className = "status" + (error ? " error" : "");
+      }
+      function renderList() {
+        const q = $("#search").value.toLowerCase(),
+          filtered = rows.filter((r) =>
+            (r.title + " " + r.cwd).toLowerCase().includes(q),
+          );
+        $("#count").textContent = filtered.length + " sessions";
+        $("#list").replaceChildren();
+        const groups = new Map();
+        for (const r of filtered) {
+          if (!groups.has(r.cwd)) groups.set(r.cwd, []);
+          groups.get(r.cwd).push(r);
+        }
+        for (const [path, items] of groups) {
+          const group = el(
+            "div",
+            path.replace(/^\/Users\/[^/]+/, "~"),
+            "project",
+          );
+          group.title = path;
+          $("#list").append(group);
+          for (const r of items) {
+            const b = el(
+              "button",
+              "",
+              "session" + (r.id === selected ? " active" : ""),
+            );
+            const needs = state.requests.some(
+              (p) => p.params?.threadId === r.id,
+            );
+            b.append(
+              el(
+                "span",
+                (needs ? "● " : "○ ") + (r.title || "Untitled session"),
+                "session-title",
+              ),
+              el(
+                "span",
+                (needs ? "Needs you · " : "") +
+                  new Date(r.updated_at * 1000).toLocaleDateString() +
+                  (r.archived ? " · Archived" : ""),
+                "session-meta",
+              ),
+            );
+            b.title = r.title;
+            b.onclick = () => openSession(r);
+            $("#list").append(b);
+          }
+        }
+      }
+      function inline(text, node) {
+        const re =
+          /(`[^`\n]+`|\*\*[^*\n]+\*\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
+        let last = 0;
+        for (const m of text.matchAll(re)) {
+          node.append(document.createTextNode(text.slice(last, m.index)));
+          const t = m[0];
+          if (t.startsWith("`")) node.append(el("code", t.slice(1, -1)));
+          else if (t.startsWith("**"))
+            node.append(el("strong", t.slice(2, -2)));
+          else {
+            const parts = t.match(/^\[([^\]]+)\]\((.+)\)$/),
+              a = el("a", parts[1]);
+            a.href = parts[2];
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            node.append(a);
+          }
+          last = m.index + t.length;
+        }
+        node.append(document.createTextNode(text.slice(last)));
+      }
+      function format(text) {
+        const n = el("div", "", "text"),
+          parts = text.split(/```[^\n]*\n([\s\S]*?)```/g);
+        parts.forEach((part, i) => {
+          if (i % 2) {
+            const pre = el("pre", "");
+            pre.append(el("code", part));
+            n.append(pre);
+          } else inline(part, n);
+        });
+        return n;
+      }
+      function latest() {
+        const sc = $("#scroll");
+        sc.scrollTop = sc.scrollHeight;
+        follow = true;
+        $("#jump").hidden = true;
+      }
+      async function load() {
+        rows = await api("/api/sessions");
+        renderList();
+      }
+      async function history(force = false) {
+        const id = selected,
+          v = version;
+        if (!id) return;
+        const messages = await api("/api/history?id=" + encodeURIComponent(id));
+        if (id !== selected || v !== version) return;
+        const sig = JSON.stringify(messages);
+        if (sig === historySignature && !force) return;
+        historySignature = sig;
+        const sc = $("#scroll"),
+          old = sc.scrollTop;
+        $("#messages").replaceChildren();
+        for (const m of messages) {
+          const section = el("section", "", "message " + m.role);
+          if (m.role === "tool") {
+            const details = el("details", "");
+            const summary = el(
+              "summary",
+              (m.name === "Output" ? "↳ Output" : "⌘ " + m.name) +
+                " · " +
+                (m.text.split("\n")[0] || "No output").slice(0, 110),
+            );
+            details.append(summary, el("pre", m.text, "tool-output"));
+            section.append(details);
+          } else
+            section.append(
+              el("div", m.role === "user" ? "› You" : "• Codex", "role"),
+              format(m.text),
+            );
+          $("#messages").append(section);
+        }
+        if (!messages.length)
+          $("#messages").append(el("div", "No saved messages yet.", "empty"));
+        if (follow || force) requestAnimationFrame(latest);
+        else {
+          sc.scrollTop = old;
+          $("#jump").hidden = false;
+        }
+      }
+      async function openSession(r) {
+        if (selected) drafts[selected] = $("#prompt").value;
+        selected = r.id;
+        version++;
+        historySignature = "";
+        approvalSignature = "";
+        follow = true;
+        document.body.classList.add("open");
+        $("#bottom").hidden = false;
+        $("#title").textContent = r.title || "Untitled session";
+        $("#path").textContent = r.cwd;
+        $("#prompt").value = drafts[r.id] || "";
+        $("#prompt").disabled = !!r.archived;
+        $("#send").disabled = !!r.archived || sending;
+        $("#model").textContent = (r.model || "Codex") + " · Enter to send";
+        $("#messages").replaceChildren(el("div", "Loading history…", "empty"));
+        status(
+          r.archived ? "Archived session — unarchive in Codex to reply." : "",
+        );
+        renderList();
+        renderApprovals();
+        try {
+          await history(true);
+          if (!r.archived) {
+            const id = r.id;
+            await api("/api/attach", { id });
+            if (id === selected) await pollState();
+          }
+        } catch (e) {
+          status(e.message, true);
+        }
+      }
+      async function pollState() {
+        try {
+          state = await api("/api/state");
+          $("#connection").textContent = state.connected
+            ? "● Connected"
+            : "○ Connection unavailable";
+          if (state.error) status(state.error, true);
+          else if ($("#status").classList.contains("error")) status("");
+          renderApprovals();
+          renderList();
+        } catch (e) {
+          $("#connection").textContent = "○ Disconnected";
+          if (selected) status(e.message, true);
+        }
+      }
+      function renderApprovals() {
+        const requests = state.requests.filter(
+            (p) => p.params?.threadId === selected,
+          ),
+          sig = JSON.stringify(requests);
+        if (sig === approvalSignature) return;
+        approvalSignature = sig;
+        $("#approvals").replaceChildren();
+        for (const r of requests) {
+          const p = r.params || {},
+            card = el("section", "", "approval");
+          card.append(
+            el(
+              "h3",
+              r.method === "item/tool/requestUserInput"
+                ? "Codex needs your input"
+                : "Approval required",
+            ),
+          );
+          if (p.reason) card.append(el("p", p.reason));
+          const detail = { ...p };
+          delete detail.questions;
+          card.append(
+            el(
+              "pre",
+              JSON.stringify(
+                r.item ? { request: detail, item: r.item } : detail,
+                null,
+                2,
+              ),
+            ),
+          );
+          const submit = async (answer) => {
+            card.querySelectorAll("button").forEach((b) => (b.disabled = true));
+            try {
+              await api("/api/answer", { key: r.key, answer });
+              status("Response sent.");
+              await pollState();
+            } catch (e) {
+              status(e.message, true);
+              card
+                .querySelectorAll("button")
+                .forEach((b) => (b.disabled = false));
+            }
+          };
+          if (r.method === "item/tool/requestUserInput") {
+            const fields = {};
+            for (const q of p.questions || []) {
+              const label = el("label", q.question || q.header || q.id);
+              const input = el("input", "");
+              input.type = q.isSecret ? "password" : "text";
+              input.autocomplete = "off";
+              fields[q.id] = input;
+              if (q.options?.length) {
+                const options = el("div", "");
+                for (const option of q.options) {
+                  const b = el("button", option.label);
+                  b.title = option.description || "";
+                  b.onclick = () => (input.value = option.label);
+                  options.append(b);
+                }
+                label.append(options);
+              }
+              label.append(input);
+              card.append(label);
+            }
+            const b = el("button", "Submit answers", "approve");
+            b.onclick = () =>
+              submit(
+                Object.fromEntries(
+                  Object.entries(fields).map(([k, v]) => [k, v.value]),
+                ),
+              );
+            card.append(b);
+          } else if (
+            [
+              "item/commandExecution/requestApproval",
+              "item/fileChange/requestApproval",
+              "item/permissions/requestApproval",
+            ].includes(r.method)
+          ) {
+            for (const [value, label] of [
+              ["accept", "Yes, approve once"],
+              ["decline", "No, decline"],
+            ]) {
+              if (p.availableDecisions && !p.availableDecisions.includes(value))
+                continue;
+              const b = el(
+                "button",
+                label,
+                value === "accept" ? "approve" : "",
+              );
+              b.onclick = () => submit(value);
+              card.append(b);
+            }
+          } else
+            card.append(
+              el("p", "This prompt type needs the original Codex client."),
+            );
+          $("#approvals").append(card);
+        }
+      }
+      $("#composer").onsubmit = async (e) => {
+        e.preventDefault();
+        const message = $("#prompt").value.trim(),
+          id = selected;
+        if (!message || !id || sending) return;
+        sending = true;
+        $("#send").disabled = true;
+        status("Sending…");
+        try {
+          await api("/api/reply", { id, message });
+          drafts[id] = "";
+          if (selected === id) {
+            $("#prompt").value = "";
+            status("Sent · Codex is working");
+            follow = true;
+            await history();
+          }
+        } catch (e) {
+          status(e.message, true);
+        } finally {
+          sending = false;
+          $("#send").disabled = !!rows.find((r) => r.id === selected)?.archived;
+        }
+      };
+      $("#prompt").onkeydown = (e) => {
+        if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+          e.preventDefault();
+          $("#composer").requestSubmit();
+        }
+      };
+      $("#scroll").onscroll = () => {
+        const s = $("#scroll");
+        follow = s.scrollHeight - s.scrollTop - s.clientHeight < 80;
+        $("#jump").hidden = follow;
+      };
+      $("#jump").onclick = latest;
+      $(".back").onclick = () => document.body.classList.remove("open");
+      $("#search").oninput = renderList;
+      $("#refresh").onclick = async () => {
+        try {
+          await load();
+          await history();
+          await pollState();
+        } catch (e) {
+          status(e.message, true);
+        }
+      };
+      (async () => {
+        try {
+          token = (await api("/api/token")).token;
+          await load();
+          await pollState();
+        } catch (e) {
+          $("#count").textContent = e.message;
+        }
+        setInterval(async () => {
+          if (document.hidden) return;
+          try {
+            await pollState();
+            await history();
+          } catch (e) {
+            status(e.message, true);
+          }
+        }, 2500);
+      })();
+    </script>
+  </body>
+</html>
